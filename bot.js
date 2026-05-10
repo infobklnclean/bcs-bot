@@ -13,7 +13,10 @@ const T = {
     welcome:        (n) => `👋 Привет, *${n}*!\n\n🏢 *BCS Quality Control*\n\nУкажи адрес объекта:`,
     askAddress:     "📍 Адрес объекта (или /skip):",
     chooseService:  "🧹 Выбери тип уборки:",
-    photoBefore:    (s) => `${s}\n\n📸 *Шаг 1 — Фото ДО*\nСфотографируй каждую зону ДО начала.\nМин. 3 фото: кухня, ванная, общий вид.\n⬆️ Отправляй фото в чат`,
+    photoEquip:     (s) => `${s}\n\n🧴 *Шаг 1 — Фото оборудования*\n\nСфотографируй все средства и оборудование которые взял на заказ:\n• Моющие средства\n• Пылесос\n• Швабры, тряпки, губки\n• Всё остальное\n\n⬆️ Отправляй фото в чат`,
+    equipGot:       (n) => `🧴 Фото оборудования: ${n} шт. Отправь ещё или продолжи:`,
+    equipDone:      "✅ Оборудование готово → Фото ДО",
+    photoBefore:    (s) => `📸 *Шаг 2 — Фото ДО уборки*\nСфотографируй каждую зону ДО начала.\nМин. 3 фото: кухня, ванная, общий вид.\n⬆️ Отправляй фото в чат`,
     startNoPhoto:   "▶️ Начать без фото",
     startPhoto:     (n) => `▶️ Начать уборку (фото: ${n})`,
     photoBeforeGot: (n) => `📸 Фото ДО: ${n} шт. Отправь ещё или начни:`,
@@ -49,7 +52,10 @@ const T = {
     welcome:        (n) => `👋 Hello, *${n}*!\n\n🏢 *BCS Quality Control*\n\nEnter property address:`,
     askAddress:     "📍 Property address (or /skip):",
     chooseService:  "🧹 Choose cleaning type:",
-    photoBefore:    (s) => `${s}\n\n📸 *Step 1 — Photos BEFORE*\nPhoto each zone BEFORE starting.\nMin 3: kitchen, bathroom, overview.\n⬆️ Send photos to chat`,
+    photoEquip:     (s) => `${s}\n\n🧴 *Step 1 — Equipment photos*\n\nPhoto all supplies and equipment you brought:\n• Cleaning products\n• Vacuum cleaner\n• Mops, cloths, sponges\n• Everything else\n\n⬆️ Send photos to chat`,
+    equipGot:       (n) => `🧴 Equipment photos: ${n}. Send more or continue:`,
+    equipDone:      "✅ Equipment confirmed → Photos BEFORE",
+    photoBefore:    (s) => `📸 *Step 2 — Photos BEFORE cleaning*\nPhoto each zone BEFORE starting.\nMin 3: kitchen, bathroom, overview.\n⬆️ Send photos to chat`,
     startNoPhoto:   "▶️ Start without photos",
     startPhoto:     (n) => `▶️ Start cleaning (photos: ${n})`,
     photoBeforeGot: (n) => `📸 Before photos: ${n}. Send more or start:`,
@@ -85,7 +91,10 @@ const T = {
     welcome:        (n) => `👋 Salom, *${n}*!\n\n🏢 *BCS Quality Control*\n\nOb'ekt manzilini kiriting:`,
     askAddress:     "📍 Ob'ekt manzili (yoki /skip):",
     chooseService:  "🧹 Tozalash turini tanlang:",
-    photoBefore:    (s) => `${s}\n\n📸 *1-qadam — OLDIN suratlar*\nHar zonani tozalashdan OLDIN suratlang.\nKamida 3: oshxona, hammom, umumiy.\n⬆️ Suratlarni chatga yuboring`,
+    photoEquip:     (s) => `${s}\n\n🧴 *1-qadam — Jihozlar suratlari*\n\nOlib kelgan barcha vosita va jihozlarni suratlang:\n• Tozalash vositalari\n• Changsos\n• Mop, latta, gubkalar\n• Boshqa hamma narsa\n\n⬆️ Suratlarni chatga yuboring`,
+    equipGot:       (n) => `🧴 Jihozlar suratlari: ${n} ta. Yana yuboring yoki:`,
+    equipDone:      "✅ Jihozlar tasdiqlandi → OLDIN suratlar",
+    photoBefore:    (s) => `📸 *2-qadam — OLDIN suratlar*\nHar zonani tozalashdan OLDIN suratlang.\nKamida 3: oshxona, hammom, umumiy.\n⬆️ Suratlarni chatga yuboring`,
     startNoPhoto:   "▶️ Suratsiz boshlash",
     startPhoto:     (n) => `▶️ Boshlash (surat: ${n})`,
     photoBeforeGot: (n) => `📸 Oldin suratlari: ${n} ta. Yana yuboring yoki:`,
@@ -310,7 +319,7 @@ const sessions = {};
 const cleaners = {}; // chatId → { name, lang }
 
 function sess(id) {
-  if (!sessions[id]) sessions[id] = { step: "idle", service: null, zoneIdx: 0, checked: {}, photoBefore: [], photoAfter: [], criticalDone: {}, startedAt: null, address: null };
+  if (!sessions[id]) sessions[id] = { step: "idle", service: null, zoneIdx: 0, checked: {}, photoEquip: [], photoBefore: [], photoAfter: [], criticalDone: {}, startedAt: null, address: null };
   return sessions[id];
 }
 function resetSess(id) { sessions[id] = null; return sess(id); }
@@ -422,6 +431,7 @@ async function sendReport(id, s, user) {
     `━━━━━━━━━━━━━━━━━━━━\n` +
     `*Зоны:*\n${zonesText}` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
+    `🧴 Фото оборудования: ${s.photoEquip.length} шт\n` +
     `📸 Фото ДО: ${s.photoBefore.length} шт\n` +
     `${photoStatus}\n` +
     (missedText
@@ -429,6 +439,10 @@ async function sendReport(id, s, user) {
       : `━━━━━━━━━━━━━━━━━━━━\n✅ Все пункты выполнены\n`);
 
   await bot.sendMessage(ADMIN_ID, txt, { parse_mode: "Markdown" });
+  if (s.photoEquip.length) {
+    await bot.sendMessage(ADMIN_ID, "🧴 *Фото оборудования:*", { parse_mode: "Markdown" });
+    for (const f of s.photoEquip) await bot.sendPhoto(ADMIN_ID, f);
+  }
   if (s.photoBefore.length) {
     await bot.sendMessage(ADMIN_ID, "📸 *Фото ДО:*", { parse_mode: "Markdown" });
     for (const f of s.photoBefore) await bot.sendPhoto(ADMIN_ID, f);
@@ -482,7 +496,10 @@ bot.on("message", async (msg) => {
 
   if (msg.photo) {
     const fid = msg.photo[msg.photo.length - 1].file_id;
-    if (s.step === "photo_before") {
+    if (s.step === "photo_equip") {
+      s.photoEquip.push(fid);
+      await bot.sendMessage(id, tr(id, "equipGot", s.photoEquip.length), { reply_markup: { inline_keyboard: [[{ text: tr(id, "equipDone"), callback_data: "EQUIP_DONE" }]] } });
+    } else if (s.step === "photo_before") {
       s.photoBefore.push(fid);
       await bot.sendMessage(id, tr(id, "photoBeforeGot", s.photoBefore.length), { reply_markup: { inline_keyboard: [[{ text: tr(id, "startPhoto", s.photoBefore.length), callback_data: "START_CLEAN" }]] } });
     } else if (s.step === "photo_after") {
@@ -529,8 +546,15 @@ bot.on("callback_query", async (q) => {
   // Service
   if (data.startsWith("S_")) {
     const key = data.slice(2);
-    Object.assign(s, { service: key, checked: {}, photoBefore: [], photoAfter: [], criticalDone: {}, step: "photo_before", zoneIdx: 0 });
-    await bot.editMessageText(tr(id, "photoBefore", SERVICES[lang(id)][key]), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "startNoPhoto"), callback_data: "START_CLEAN" }]] } });
+    Object.assign(s, { service: key, checked: {}, photoEquip: [], photoBefore: [], photoAfter: [], criticalDone: {}, step: "photo_equip", zoneIdx: 0 });
+    await bot.editMessageText(tr(id, "photoEquip", SERVICES[lang(id)][key]), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "equipDone"), callback_data: "EQUIP_DONE" }]] } });
+    return;
+  }
+
+  // Equipment photos done → go to photo before
+  if (data === "EQUIP_DONE") {
+    s.step = "photo_before";
+    await bot.editMessageText(tr(id, "photoBefore", SERVICES[lang(id)][s.service]), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "startNoPhoto"), callback_data: "START_CLEAN" }]] } });
     return;
   }
 
