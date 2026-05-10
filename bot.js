@@ -37,6 +37,11 @@ const T = {
     rptZones:       "Зоны:",
     lblBefore:      "📸 *Фото ДО:*",
     lblAfter:       "📸 *Фото ПОСЛЕ:*",
+    earlyFinishBtn: "🏁 Завершить заказ",
+    warningTitle:   "⚠️ *Внимание! Не все пункты выполнены*\n\nВы не убрали следующее:\n",
+    warningFooter:  "\n❗️ Убедитесь что всё доделано на месте, *не уходя с заказа*.\n\nЕсли всё готово — нажмите подтвердить.",
+    confirmFinish:  "✅ Подтвердить завершение",
+    goBackBtn:      "← Вернуться и доделать",
   },
   en: {
     askLang:        "🌐 Выбери язык / Choose language / Tilni tanlang:",
@@ -68,6 +73,11 @@ const T = {
     rptZones:       "Zones:",
     lblBefore:      "📸 *Photos BEFORE:*",
     lblAfter:       "📸 *Photos AFTER:*",
+    earlyFinishBtn: "🏁 Finish order",
+    warningTitle:   "⚠️ *Warning! Not all tasks are done*\n\nYou have not completed:\n",
+    warningFooter:  "\n❗️ Please make sure everything is finished *before leaving the property*.\n\nIf everything is done — tap confirm.",
+    confirmFinish:  "✅ Confirm completion",
+    goBackBtn:      "← Go back and finish",
   },
   uz: {
     askLang:        "🌐 Выбери язык / Choose language / Tilni tanlang:",
@@ -99,6 +109,11 @@ const T = {
     rptZones:       "Zonalar:",
     lblBefore:      "📸 *Oldin suratlari:*",
     lblAfter:       "📸 *Keyin suratlari:*",
+    earlyFinishBtn: "🏁 Buyurtmani yakunlash",
+    warningTitle:   "⚠️ *Diqqat! Barcha bandlar bajarilmagan*\n\nQuyidagilar bajarilmadi:\n",
+    warningFooter:  "\n❗️ Ob'ektdan *ketmasdan oldin* hamma narsani tugatganingizga ishoning.\n\nHamma narsa tayyor bo'lsa — tasdiqlang.",
+    confirmFinish:  "✅ Yakunlashni tasdiqlash",
+    goBackBtn:      "← Orqaga va tugatish",
   },
 };
 
@@ -330,6 +345,8 @@ function zonesKbd(id, s) {
     return (s.checked[z] || []).filter(Boolean).length === items.length;
   });
   if (allDone) rows.push([{ text: tr(id, "allDone"), callback_data: "PHOTO_AFTER" }]);
+  // Always show early finish button
+  rows.push([{ text: tr(id, "earlyFinishBtn"), callback_data: "EARLY_FINISH" }]);
   return { inline_keyboard: rows };
 }
 
@@ -505,6 +522,47 @@ bot.on("callback_query", async (q) => {
   if (data === "BACK_ZONES") {
     s.step = "zones";
     await showZones(id, msgId, s);
+    return;
+  }
+
+  // Early finish — check for incomplete items and warn
+  if (data === "EARLY_FINISH") {
+    const l = lang(id);
+    const incomplete = [];
+    for (const zone of ZONES) {
+      const items = (CHECKLISTS[s.service] || {})[zone] || [];
+      const ch = s.checked[zone] || [];
+      items.forEach((item, i) => {
+        if (!ch[i]) incomplete.push(`• ${ZONE_LABELS[l][zone]}: ${item[l] || item.ru}`);
+      });
+    }
+    if (incomplete.length === 0) {
+      // All done — go straight to photo after
+      s.step = "photo_after";
+      s.photoAfter = [];
+      await bot.editMessageText(tr(id, "photoAfter"), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "gotoCrit"), callback_data: "CRIT" }]] } });
+    } else {
+      const list = incomplete.slice(0, 15).join("\n"); // cap at 15 items to avoid message too long
+      const extra = incomplete.length > 15 ? `\n...и ещё ${incomplete.length - 15} пунктов` : "";
+      const txt = tr(id, "warningTitle") + list + extra + tr(id, "warningFooter");
+      await bot.editMessageText(txt, {
+        chat_id: id, message_id: msgId, parse_mode: "Markdown",
+        reply_markup: { inline_keyboard: [
+          [{ text: tr(id, "confirmFinish"), callback_data: "FINISH_FORCED" }],
+          [{ text: tr(id, "goBackBtn"),     callback_data: "BACK_ZONES"    }],
+        ]},
+      });
+    }
+    return;
+  }
+
+  // Forced finish (confirmed despite incomplete)
+  if (data === "FINISH_FORCED") {
+    const dur = s.startedAt ? Math.round((Date.now() - s.startedAt) / 60000) : "—";
+    const nm  = name(id) || q.from.first_name;
+    await bot.editMessageText(tr(id, "finished", nm, SERVICES[lang(id)][s.service], dur, s.address||"—", s.photoBefore.length, s.photoAfter.length), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "newOrder"), callback_data: "NEW" }]] } });
+    await sendReport(id, s, q.from);
+    resetSess(id);
     return;
   }
 
