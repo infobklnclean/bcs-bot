@@ -602,32 +602,30 @@ bot.on("callback_query", async (q) => {
       });
     }
     if (incomplete.length === 0) {
-      // All done — go straight to photo after
+      // All done — go to photo after
       s.step = "photo_after";
       s.photoAfter = [];
       await bot.editMessageText(tr(id, "photoAfter"), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "gotoCrit"), callback_data: "CRIT" }]] } });
     } else {
-      const list = incomplete.slice(0, 15).join("\n"); // cap at 15 items to avoid message too long
+      const list = incomplete.slice(0, 15).join("\n");
       const extra = incomplete.length > 15 ? `\n...и ещё ${incomplete.length - 15} пунктов` : "";
       const txt = tr(id, "warningTitle") + list + extra + tr(id, "warningFooter");
       await bot.editMessageText(txt, {
         chat_id: id, message_id: msgId, parse_mode: "Markdown",
         reply_markup: { inline_keyboard: [
-          [{ text: tr(id, "confirmFinish"), callback_data: "FINISH_FORCED" }],
-          [{ text: tr(id, "goBackBtn"),     callback_data: "BACK_ZONES"    }],
+          [{ text: tr(id, "confirmFinish"), callback_data: "GOTO_PHOTO_AFTER" }],
+          [{ text: tr(id, "goBackBtn"),     callback_data: "BACK_ZONES"        }],
         ]},
       });
     }
     return;
   }
 
-  // Forced finish (confirmed despite incomplete)
-  if (data === "FINISH_FORCED") {
-    const dur = s.startedAt ? Math.round((Date.now() - s.startedAt) / 60000) : "—";
-    const nm  = name(id) || q.from.first_name;
-    await bot.editMessageText(tr(id, "finished", nm, SERVICES[lang(id)][s.service], dur, s.address||"—", s.photoBefore.length, s.photoAfter.length), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "newOrder"), callback_data: "NEW" }]] } });
-    await sendReport(id, s, q.from);
-    resetSess(id);
+  // Confirmed despite incomplete — go to photo after
+  if (data === "GOTO_PHOTO_AFTER") {
+    s.step = "photo_after";
+    s.photoAfter = [];
+    await bot.editMessageText(tr(id, "photoAfter"), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "gotoCrit"), callback_data: "CRIT" }]] } });
     return;
   }
 
