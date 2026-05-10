@@ -380,22 +380,63 @@ function critKbd(id, s) {
 
 async function sendReport(id, s, user) {
   if (!ADMIN_ID) return;
-  const l    = lang(id);
-  const svc  = SERVICES[l][s.service];
-  const dur  = s.startedAt ? Math.round((Date.now() - s.startedAt) / 60000) : "—";
-  const nm   = name(id) || user.first_name;
-  let zones  = "";
+  const l   = lang(id);
+  const svc = SERVICES[l][s.service];
+  const dur = s.startedAt ? Math.round((Date.now() - s.startedAt) / 60000) : "—";
+  const nm  = name(id) || user.first_name;
+
+  // Zones summary
+  let zonesText = "";
   for (const z of ZONES) {
     const items = (CHECKLISTS[s.service] || {})[z] || [];
     if (!items.length) continue;
-    zones += `${ZONE_LABELS[l][z]}: ${(s.checked[z]||[]).filter(Boolean).length}/${items.length}\n`;
+    const done  = (s.checked[z]||[]).filter(Boolean).length;
+    const icon  = done === items.length ? "✅" : "⚠️";
+    zonesText += `${icon} ${ZONE_LABELS["ru"][z]}: ${done}/${items.length}\n`;
   }
-  const txt = tr(id, "rptHdr", nm, user.username||"—", s.address||"—", svc, LANG_NAMES[l], dur)
-            + `${tr(id, "rptZones")}\n${zones}`
-            + tr(id, "rptPhoto", s.photoBefore.length, s.photoAfter.length);
+
+  // Incomplete items list
+  let missedText = "";
+  for (const z of ZONES) {
+    const items = (CHECKLISTS[s.service] || {})[z] || [];
+    const ch    = s.checked[z] || [];
+    const missed = items.filter((_, i) => !ch[i]);
+    if (missed.length) {
+      missedText += `\n*${ZONE_LABELS["ru"][z]}:*\n`;
+      missed.forEach(item => { missedText += `  • ${item.ru}\n`; });
+    }
+  }
+
+  const photoStatus = s.photoAfter.length === 0
+    ? "❌ Фото ПОСЛЕ — не загружены!"
+    : `✅ Фото ПОСЛЕ: ${s.photoAfter.length} шт`;
+
+  const txt =
+    `📋 *ОТЧЁТ О ЗАКАЗЕ*\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `👤 ${nm} (@${user.username||"—"})\n` +
+    `📍 ${s.address||"—"}\n` +
+    `🧹 ${svc}\n` +
+    `⏱ ${dur} мин\n` +
+    `📅 ${new Date().toLocaleString("ru-RU")}\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `*Зоны:*\n${zonesText}` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `📸 Фото ДО: ${s.photoBefore.length} шт\n` +
+    `${photoStatus}\n` +
+    (missedText
+      ? `━━━━━━━━━━━━━━━━━━━━\n⚠️ *Не выполнено:*${missedText}`
+      : `━━━━━━━━━━━━━━━━━━━━\n✅ Все пункты выполнены\n`);
+
   await bot.sendMessage(ADMIN_ID, txt, { parse_mode: "Markdown" });
-  if (s.photoBefore.length) { await bot.sendMessage(ADMIN_ID, tr(id, "lblBefore"), { parse_mode: "Markdown" }); for (const f of s.photoBefore) await bot.sendPhoto(ADMIN_ID, f); }
-  if (s.photoAfter.length)  { await bot.sendMessage(ADMIN_ID, tr(id, "lblAfter"),  { parse_mode: "Markdown" }); for (const f of s.photoAfter)  await bot.sendPhoto(ADMIN_ID, f); }
+  if (s.photoBefore.length) {
+    await bot.sendMessage(ADMIN_ID, "📸 *Фото ДО:*", { parse_mode: "Markdown" });
+    for (const f of s.photoBefore) await bot.sendPhoto(ADMIN_ID, f);
+  }
+  if (s.photoAfter.length) {
+    await bot.sendMessage(ADMIN_ID, "📸 *Фото ПОСЛЕ:*", { parse_mode: "Markdown" });
+    for (const f of s.photoAfter) await bot.sendPhoto(ADMIN_ID, f);
+  }
 }
 
 // ─── ZONE VIEW ────────────────────────────────────────────────────────────────
@@ -579,7 +620,11 @@ bot.on("callback_query", async (q) => {
     s.step = "critical";
     const done  = Object.values(s.criticalDone).filter(Boolean).length;
     const total = CRITICAL_FINAL[lang(id)].length;
-    await bot.editMessageText(tr(id, "critTitle", s.photoAfter.length, bar(done, total)), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: critKbd(id, s) });
+    const photoWarning = s.photoAfter.length === 0
+      ? "\n⚠️ *Фото ПОСЛЕ не загружены!* Не забудь отправить фото.\n"
+      : `\n✅ Фото ПОСЛЕ: ${s.photoAfter.length} шт\n`;
+    const title = `📸 Фото ПОСЛЕ: ${s.photoAfter.length} шт${photoWarning}\n🔍 *Шаг 4 — Финальная проверка*\n${bar(done, total)}\n\nПроверь каждый пункт перед сдачей:`;
+    await bot.editMessageText(title, { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: critKbd(id, s) });
     return;
   }
 
