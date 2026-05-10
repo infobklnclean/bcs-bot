@@ -2,509 +2,556 @@ const TelegramBot = require("node-telegram-bot-api");
 
 const TOKEN = process.env.BOT_TOKEN;
 const ADMIN_ID = process.env.ADMIN_CHAT_ID;
-
 const bot = new TelegramBot(TOKEN, { polling: true });
 
-// ─── ПЕРЕВОДЫ ─────────────────────────────────────────────────────────────────
+// ─── TRANSLATIONS ──────────────────────────────────────────────────────────────
 
 const T = {
   ru: {
-    askLang: "🌐 Выбери язык / Choose language / Tilni tanlang:",
-    askName: "👤 Как тебя зовут? Введи имя и фамилию:",
-    welcome: (name) => `👋 Привет, *${name}*!\n\n🏢 *BCS Quality Control*\nСистема контроля качества\n\nУкажи адрес объекта:`,
-    askAddress: "📍 Укажи адрес объекта (или /skip):",
-    chooseService: "🧹 Выбери тип уборки:",
-    photoBeforeTitle: (svc) => `${svc}\n\n📸 *Шаг 1 — Фото ДО уборки*\n\nСделай фото каждой зоны ДО начала работы.\n\nМинимум 3 фото:\n• Кухня (плита + раковина)\n• Ванная (унитаз + душ)\n• Общий вид\n\n⬆️ Отправляй фото прямо в этот чат`,
-    startWithoutPhoto: "▶️ Начать без фото",
-    startCleaning: (n) => `▶️ Начать уборку (фото: ${n})`,
-    step2title: (svc, bar) => `${svc}\n\n📋 *Шаг 2 — Уборка по зонам*\n${bar}\n\nВыбери зону:`,
-    photoReceived: (n) => `📸 Фото ДО получено (${n} шт)\n\nОтправь ещё или нажми:`,
-    photoAfterReceived: (n) => `📸 Фото ПОСЛЕ получено (${n} шт)\n\nОтправь ещё или нажми:`,
-    startCleaningBtn: (n) => `▶️ Начать уборку (фото: ${n})`,
-    gotoCriticalBtn: (n) => `✅ К финальной проверке (фото: ${n})`,
-    allZonesDone: "📸 Все зоны готовы → Фото ПОСЛЕ",
-    photoAfterTitle: `✅ *Все зоны выполнены!*\n\n📸 *Шаг 3 — Фото ПОСЛЕ уборки*\n\nСделай фото с тех же точек что и «до»\n\n⬆️ Отправляй фото прямо в этот чат`,
-    gotoCritical: "✅ Перейти к финальной проверке",
-    criticalTitle: (n, bar) => `📸 Фото ПОСЛЕ: ${n} шт\n\n🔍 *Шаг 4 — Финальная проверка*\n${bar}\n\nПроверь каждый пункт:`,
-    finishBtn: "🏁 Завершить заказ и отправить отчёт",
-    finished: (name, svc, dur, addr, before, after) =>
-      `🎉 *Заказ завершён!*\n\n👤 Клинер: ${name}\n📅 ${new Date().toLocaleString("ru-RU")}\n⏱ Время: ${dur} мин\n🧹 Тип: ${svc}\n📍 Адрес: ${addr}\n📸 Фото до: ${before} шт\n📸 Фото после: ${after} шт\n\n✅ Отчёт отправлен менеджеру BCS\n\nСпасибо за работу! 💪`,
-    newOrder: "🔄 Новый заказ",
-    newOrderPrompt: "🏠 Укажи адрес нового объекта (или /skip):",
-    criticalHint: "🔴 — критичный (обязателен)\n⬜ — стандартный",
-    backZones: "← Назад",
-    zoneDone: "✅ Зона выполнена",
-    zoneProgress: (d, t) => `⏳ ${d}/${t}`,
-    reportHeader: (name, user, addr, svc, lang, dur) =>
-      `📋 *ОТЧЁТ О ЗАКАЗЕ*\n━━━━━━━━━━━━━━━━━━━━\n👤 Клинер: ${name} (@${user})\n🌐 Язык: ${lang}\n📍 Адрес: ${addr}\n🧹 Тип: ${svc}\n⏱ Время: ${dur} мин\n📅 ${new Date().toLocaleString("ru-RU")}\n━━━━━━━━━━━━━━━━━━━━\n`,
-    reportPhoto: (b, a) => `━━━━━━━━━━━━━━━━━━━━\n📸 Фото до: ${b} шт | После: ${a} шт\n✅ Critical check: пройден`,
-    photoBefore: "📸 *Фото ДО:*",
-    photoAfterLbl: "📸 *Фото ПОСЛЕ:*",
-    notePhotoBefore: (n) => `✅ Фото ДО: ${n} шт\n\n`,
-    noteNoPhoto: "⚠️ Фото ДО не добавлены\n\n",
-    zoneReport: "Зоны:",
+    askLang:        "🌐 Выбери язык / Choose language / Tilni tanlang:",
+    askName:        "👤 Введи своё имя и фамилию:",
+    welcome:        (n) => `👋 Привет, *${n}*!\n\n🏢 *BCS Quality Control*\n\nУкажи адрес объекта:`,
+    askAddress:     "📍 Адрес объекта (или /skip):",
+    chooseService:  "🧹 Выбери тип уборки:",
+    photoBefore:    (s) => `${s}\n\n📸 *Шаг 1 — Фото ДО*\nСфотографируй каждую зону ДО начала.\nМин. 3 фото: кухня, ванная, общий вид.\n⬆️ Отправляй фото в чат`,
+    startNoPhoto:   "▶️ Начать без фото",
+    startPhoto:     (n) => `▶️ Начать уборку (фото: ${n})`,
+    photoBeforeGot: (n) => `📸 Фото ДО: ${n} шт. Отправь ещё или начни:`,
+    step2:          (s, bar) => `*${s}*\n${bar}\n\nВыбери зону:`,
+    zoneTitle:      (name, bar) => `📍 *${name}*\n${bar}\n\n🔴 критично  ⬜ стандарт`,
+    allDone:        "📸 Все зоны ✅ → Фото ПОСЛЕ",
+    photoAfter:     "✅ *Все зоны выполнены!*\n\n📸 *Шаг 3 — Фото ПОСЛЕ*\nФото с тех же точек что и «до».\n⬆️ Отправляй фото в чат",
+    photoAfterGot:  (n) => `📸 Фото ПОСЛЕ: ${n} шт. Отправь ещё или продолжи:`,
+    gotoCrit:       "✅ К финальной проверке",
+    gotoCritN:      (n) => `✅ К финальной проверке (фото: ${n})`,
+    critTitle:      (n, bar) => `📸 Фото ПОСЛЕ: ${n} шт\n\n🔍 *Шаг 4 — Финальная проверка*\n${bar}\n\nПроверь каждый пункт перед сдачей:`,
+    finishBtn:      "🏁 Завершить и отправить отчёт",
+    finished:       (n, s, dur, addr, b, a) => `🎉 *Заказ завершён!*\n\n👤 ${n}\n📅 ${new Date().toLocaleString("ru-RU")}\n⏱ ${dur} мин\n🧹 ${s}\n📍 ${addr}\n📸 До: ${b} | После: ${a}\n\n✅ Отчёт отправлен менеджеру\nСпасибо! 💪`,
+    newOrder:       "🔄 Новый заказ",
+    newOrderMsg:    "🏠 Адрес нового объекта (или /skip):",
+    back:           "← Назад к зонам",
+    zoneDone:       "✅ Зона готова →",
+    inProgress:     (d,t) => `⏳ ${d}/${t}`,
+    rptHdr:         (n, u, addr, s, lang, dur) => `📋 *ОТЧЁТ*\n━━━━━━━━━━━━━━━━━━━━\n👤 ${n} (@${u})\n🌐 ${lang}\n📍 ${addr}\n🧹 ${s}\n⏱ ${dur} мин\n📅 ${new Date().toLocaleString("ru-RU")}\n━━━━━━━━━━━━━━━━━━━━\n`,
+    rptPhoto:       (b, a) => `━━━━━━━━━━━━━━━━━━━━\n📸 До: ${b} шт | После: ${a} шт\n✅ Critical check: пройден`,
+    rptZones:       "Зоны:",
+    lblBefore:      "📸 *Фото ДО:*",
+    lblAfter:       "📸 *Фото ПОСЛЕ:*",
   },
   en: {
-    askLang: "🌐 Выбери язык / Choose language / Tilni tanlang:",
-    askName: "👤 What's your name? Enter first and last name:",
-    welcome: (name) => `👋 Hello, *${name}*!\n\n🏢 *BCS Quality Control*\nQuality control system\n\nEnter the property address:`,
-    askAddress: "📍 Enter property address (or /skip):",
-    chooseService: "🧹 Choose cleaning type:",
-    photoBeforeTitle: (svc) => `${svc}\n\n📸 *Step 1 — Photos BEFORE cleaning*\n\nTake photos of each area BEFORE starting.\n\nMin 3 photos:\n• Kitchen (stove + sink)\n• Bathroom (toilet + shower)\n• General view\n\n⬆️ Send photos to this chat`,
-    startWithoutPhoto: "▶️ Start without photos",
-    startCleaning: (n) => `▶️ Start cleaning (photos: ${n})`,
-    step2title: (svc, bar) => `${svc}\n\n📋 *Step 2 — Clean by zones*\n${bar}\n\nSelect a zone:`,
-    photoReceived: (n) => `📸 BEFORE photo received (${n})\n\nSend more or tap:`,
-    photoAfterReceived: (n) => `📸 AFTER photo received (${n})\n\nSend more or tap:`,
-    startCleaningBtn: (n) => `▶️ Start cleaning (photos: ${n})`,
-    gotoCriticalBtn: (n) => `✅ Final check (photos: ${n})`,
-    allZonesDone: "📸 All zones done → Photos AFTER",
-    photoAfterTitle: `✅ *All zones complete!*\n\n📸 *Step 3 — Photos AFTER cleaning*\n\nTake photos from the same spots as before\n\n⬆️ Send photos to this chat`,
-    gotoCritical: "✅ Go to final check",
-    criticalTitle: (n, bar) => `📸 After photos: ${n}\n\n🔍 *Step 4 — Final check*\n${bar}\n\nVerify each item:`,
-    finishBtn: "🏁 Complete order & send report",
-    finished: (name, svc, dur, addr, before, after) =>
-      `🎉 *Order complete!*\n\n👤 Cleaner: ${name}\n📅 ${new Date().toLocaleString("en-US")}\n⏱ Duration: ${dur} min\n🧹 Type: ${svc}\n📍 Address: ${addr}\n📸 Before: ${before} | After: ${after}\n\n✅ Report sent to BCS manager\n\nGreat work! 💪`,
-    newOrder: "🔄 New order",
-    newOrderPrompt: "🏠 Enter address for new order (or /skip):",
-    criticalHint: "🔴 — critical (required)\n⬜ — standard",
-    backZones: "← Back",
-    zoneDone: "✅ Zone complete",
-    zoneProgress: (d, t) => `⏳ ${d}/${t}`,
-    reportHeader: (name, user, addr, svc, lang, dur) =>
-      `📋 *ORDER REPORT*\n━━━━━━━━━━━━━━━━━━━━\n👤 Cleaner: ${name} (@${user})\n🌐 Language: ${lang}\n📍 Address: ${addr}\n🧹 Type: ${svc}\n⏱ Duration: ${dur} min\n📅 ${new Date().toLocaleString("en-US")}\n━━━━━━━━━━━━━━━━━━━━\n`,
-    reportPhoto: (b, a) => `━━━━━━━━━━━━━━━━━━━━\n📸 Before: ${b} | After: ${a}\n✅ Critical check: passed`,
-    photoBefore: "📸 *Photos BEFORE:*",
-    photoAfterLbl: "📸 *Photos AFTER:*",
-    notePhotoBefore: (n) => `✅ Before photos: ${n}\n\n`,
-    noteNoPhoto: "⚠️ No before photos\n\n",
-    zoneReport: "Zones:",
+    askLang:        "🌐 Выбери язык / Choose language / Tilni tanlang:",
+    askName:        "👤 Enter your first and last name:",
+    welcome:        (n) => `👋 Hello, *${n}*!\n\n🏢 *BCS Quality Control*\n\nEnter property address:`,
+    askAddress:     "📍 Property address (or /skip):",
+    chooseService:  "🧹 Choose cleaning type:",
+    photoBefore:    (s) => `${s}\n\n📸 *Step 1 — Photos BEFORE*\nPhoto each zone BEFORE starting.\nMin 3: kitchen, bathroom, overview.\n⬆️ Send photos to chat`,
+    startNoPhoto:   "▶️ Start without photos",
+    startPhoto:     (n) => `▶️ Start cleaning (photos: ${n})`,
+    photoBeforeGot: (n) => `📸 Before photos: ${n}. Send more or start:`,
+    step2:          (s, bar) => `*${s}*\n${bar}\n\nSelect a zone:`,
+    zoneTitle:      (name, bar) => `📍 *${name}*\n${bar}\n\n🔴 critical  ⬜ standard`,
+    allDone:        "📸 All zones ✅ → Photos AFTER",
+    photoAfter:     "✅ *All zones complete!*\n\n📸 *Step 3 — Photos AFTER*\nSame spots as before.\n⬆️ Send photos to chat",
+    photoAfterGot:  (n) => `📸 After photos: ${n}. Send more or continue:`,
+    gotoCrit:       "✅ Go to final check",
+    gotoCritN:      (n) => `✅ Final check (photos: ${n})`,
+    critTitle:      (n, bar) => `📸 After photos: ${n}\n\n🔍 *Step 4 — Final Check*\n${bar}\n\nVerify each item before finishing:`,
+    finishBtn:      "🏁 Complete & send report",
+    finished:       (n, s, dur, addr, b, a) => `🎉 *Order complete!*\n\n👤 ${n}\n📅 ${new Date().toLocaleString("en-US")}\n⏱ ${dur} min\n🧹 ${s}\n📍 ${addr}\n📸 Before: ${b} | After: ${a}\n\n✅ Report sent to manager\nGreat work! 💪`,
+    newOrder:       "🔄 New order",
+    newOrderMsg:    "🏠 New property address (or /skip):",
+    back:           "← Back to zones",
+    zoneDone:       "✅ Zone done →",
+    inProgress:     (d,t) => `⏳ ${d}/${t}`,
+    rptHdr:         (n, u, addr, s, lang, dur) => `📋 *REPORT*\n━━━━━━━━━━━━━━━━━━━━\n👤 ${n} (@${u})\n🌐 ${lang}\n📍 ${addr}\n🧹 ${s}\n⏱ ${dur} min\n📅 ${new Date().toLocaleString("en-US")}\n━━━━━━━━━━━━━━━━━━━━\n`,
+    rptPhoto:       (b, a) => `━━━━━━━━━━━━━━━━━━━━\n📸 Before: ${b} | After: ${a}\n✅ Critical check: passed`,
+    rptZones:       "Zones:",
+    lblBefore:      "📸 *Photos BEFORE:*",
+    lblAfter:       "📸 *Photos AFTER:*",
   },
   uz: {
-    askLang: "🌐 Выбери язык / Choose language / Tilni tanlang:",
-    askName: "👤 Ismingiz nima? Ism va familiyangizni kiriting:",
-    welcome: (name) => `👋 Salom, *${name}*!\n\n🏢 *BCS Quality Control*\nSifat nazorat tizimi\n\nOb'ekt manzilini kiriting:`,
-    askAddress: "📍 Ob'ekt manzilini kiriting (yoki /skip):",
-    chooseService: "🧹 Tozalash turini tanlang:",
-    photoBeforeTitle: (svc) => `${svc}\n\n📸 *1-qadam — Tozalashdan OLDIN suratlar*\n\nHar bir zonani OLDIN suratlang.\n\nKamida 3 surat:\n• Oshxona (plita + lavabo)\n• Hammom (unitaz + dush)\n• Umumiy ko'rinish\n\n⬆️ Suratlarni shu chatga yuboring`,
-    startWithoutPhoto: "▶️ Suratsiz boshlash",
-    startCleaning: (n) => `▶️ Boshlash (surat: ${n})`,
-    step2title: (svc, bar) => `${svc}\n\n📋 *2-qadam — Zonalar bo'yicha tozalash*\n${bar}\n\nZonani tanlang:`,
-    photoReceived: (n) => `📸 OLDIN surati qabul qilindi (${n} ta)\n\nYana yuboring yoki:`,
-    photoAfterReceived: (n) => `📸 KEYIN surati qabul qilindi (${n} ta)\n\nYana yuboring yoki:`,
-    startCleaningBtn: (n) => `▶️ Boshlash (surat: ${n})`,
-    gotoCriticalBtn: (n) => `✅ Yakuniy tekshiruv (surat: ${n})`,
-    allZonesDone: "📸 Barcha zonalar tayyor → KEYIN suratlar",
-    photoAfterTitle: `✅ *Barcha zonalar bajarildi!*\n\n📸 *3-qadam — Tozalashdan KEYIN suratlar*\n\nOldingi nuqtalardan surat oling\n\n⬆️ Suratlarni shu chatga yuboring`,
-    gotoCritical: "✅ Yakuniy tekshiruvga o'tish",
-    criticalTitle: (n, bar) => `📸 Keyin suratlari: ${n} ta\n\n🔍 *4-qadam — Yakuniy tekshiruv*\n${bar}\n\nHar bir bandni tekshiring:`,
-    finishBtn: "🏁 Buyurtmani yakunlash va hisobot yuborish",
-    finished: (name, svc, dur, addr, before, after) =>
-      `🎉 *Buyurtma yakunlandi!*\n\n👤 Tozalovchi: ${name}\n📅 ${new Date().toLocaleString("ru-RU")}\n⏱ Vaqt: ${dur} daqiqa\n🧹 Turi: ${svc}\n📍 Manzil: ${addr}\n📸 Oldin: ${before} ta | Keyin: ${after} ta\n\n✅ Hisobot BCS menejeriga yuborildi\n\nRahmat! 💪`,
-    newOrder: "🔄 Yangi buyurtma",
-    newOrderPrompt: "🏠 Yangi ob'ekt manzilini kiriting (yoki /skip):",
-    criticalHint: "🔴 — muhim (majburiy)\n⬜ — standart",
-    backZones: "← Orqaga",
-    zoneDone: "✅ Zona bajarildi",
-    zoneProgress: (d, t) => `⏳ ${d}/${t}`,
-    reportHeader: (name, user, addr, svc, lang, dur) =>
-      `📋 *BUYURTMA HISOBOTI*\n━━━━━━━━━━━━━━━━━━━━\n👤 Tozalovchi: ${name} (@${user})\n🌐 Til: ${lang}\n📍 Manzil: ${addr}\n🧹 Turi: ${svc}\n⏱ Vaqt: ${dur} daqiqa\n📅 ${new Date().toLocaleString("ru-RU")}\n━━━━━━━━━━━━━━━━━━━━\n`,
-    reportPhoto: (b, a) => `━━━━━━━━━━━━━━━━━━━━\n📸 Oldin: ${b} ta | Keyin: ${a} ta\n✅ Muhim tekshiruv: o'tdi`,
-    photoBefore: "📸 *Oldin suratlari:*",
-    photoAfterLbl: "📸 *Keyin suratlari:*",
-    notePhotoBefore: (n) => `✅ Oldin suratlari: ${n} ta\n\n`,
-    noteNoPhoto: "⚠️ Oldin suratlari yo'q\n\n",
-    zoneReport: "Zonalar:",
+    askLang:        "🌐 Выбери язык / Choose language / Tilni tanlang:",
+    askName:        "👤 Ism va familiyangizni kiriting:",
+    welcome:        (n) => `👋 Salom, *${n}*!\n\n🏢 *BCS Quality Control*\n\nOb'ekt manzilini kiriting:`,
+    askAddress:     "📍 Ob'ekt manzili (yoki /skip):",
+    chooseService:  "🧹 Tozalash turini tanlang:",
+    photoBefore:    (s) => `${s}\n\n📸 *1-qadam — OLDIN suratlar*\nHar zonani tozalashdan OLDIN suratlang.\nKamida 3: oshxona, hammom, umumiy.\n⬆️ Suratlarni chatga yuboring`,
+    startNoPhoto:   "▶️ Suratsiz boshlash",
+    startPhoto:     (n) => `▶️ Boshlash (surat: ${n})`,
+    photoBeforeGot: (n) => `📸 Oldin suratlari: ${n} ta. Yana yuboring yoki:`,
+    step2:          (s, bar) => `*${s}*\n${bar}\n\nZonani tanlang:`,
+    zoneTitle:      (name, bar) => `📍 *${name}*\n${bar}\n\n🔴 muhim  ⬜ standart`,
+    allDone:        "📸 Barcha zonalar ✅ → KEYIN suratlar",
+    photoAfter:     "✅ *Barcha zonalar bajarildi!*\n\n📸 *3-qadam — KEYIN suratlar*\nAvvalgi nuqtalardan surat oling.\n⬆️ Suratlarni chatga yuboring",
+    photoAfterGot:  (n) => `📸 Keyin suratlari: ${n} ta. Yana yuboring yoki:`,
+    gotoCrit:       "✅ Yakuniy tekshiruvga o'tish",
+    gotoCritN:      (n) => `✅ Yakuniy tekshiruv (surat: ${n})`,
+    critTitle:      (n, bar) => `📸 Keyin suratlari: ${n} ta\n\n🔍 *4-qadam — Yakuniy tekshiruv*\n${bar}\n\nHar bandni tekshiring:`,
+    finishBtn:      "🏁 Yakunlash va hisobot yuborish",
+    finished:       (n, s, dur, addr, b, a) => `🎉 *Buyurtma yakunlandi!*\n\n👤 ${n}\n📅 ${new Date().toLocaleString("ru-RU")}\n⏱ ${dur} daqiqa\n🧹 ${s}\n📍 ${addr}\n📸 Oldin: ${b} | Keyin: ${a}\n\n✅ Hisobot menejeriga yuborildi\nRahmat! 💪`,
+    newOrder:       "🔄 Yangi buyurtma",
+    newOrderMsg:    "🏠 Yangi ob'ekt manzili (yoki /skip):",
+    back:           "← Zonalarga qaytish",
+    zoneDone:       "✅ Zona bajarildi →",
+    inProgress:     (d,t) => `⏳ ${d}/${t}`,
+    rptHdr:         (n, u, addr, s, lang, dur) => `📋 *HISOBOT*\n━━━━━━━━━━━━━━━━━━━━\n👤 ${n} (@${u})\n🌐 ${lang}\n📍 ${addr}\n🧹 ${s}\n⏱ ${dur} daqiqa\n📅 ${new Date().toLocaleString("ru-RU")}\n━━━━━━━━━━━━━━━━━━━━\n`,
+    rptPhoto:       (b, a) => `━━━━━━━━━━━━━━━━━━━━\n📸 Oldin: ${b} ta | Keyin: ${a} ta\n✅ Tekshiruv: o'tdi`,
+    rptZones:       "Zonalar:",
+    lblBefore:      "📸 *Oldin suratlari:*",
+    lblAfter:       "📸 *Keyin suratlari:*",
   },
 };
 
 const LANG_NAMES = { ru: "🇷🇺 Русский", en: "🇺🇸 English", uz: "🇺🇿 O'zbek" };
 
 const SERVICES = {
-  ru: { deep: "🧹 Deep Cleaning", regular: "🏠 Regular Standard", moveinout: "📦 Move In / Move Out", postconstruction: "🔨 Post Construction" },
-  en: { deep: "🧹 Deep Cleaning", regular: "🏠 Regular Standard", moveinout: "📦 Move In / Move Out", postconstruction: "🔨 Post Construction" },
-  uz: { deep: "🧹 Chuqur tozalash", regular: "🏠 Standart tozalash", moveinout: "📦 Kirish / Chiqish", postconstruction: "🔨 Qurilishdan keyin" },
+  ru: { deep: "🧹 Deep Cleaning", regular: "🏠 Regular Standard", moveinout: "📦 Move In/Out", postconstruction: "🔨 Post Construction" },
+  en: { deep: "🧹 Deep Cleaning", regular: "🏠 Regular Standard", moveinout: "📦 Move In/Out", postconstruction: "🔨 Post Construction" },
+  uz: { deep: "🧹 Chuqur tozalash", regular: "🏠 Standart", moveinout: "📦 Kirish/Chiqish", postconstruction: "🔨 Qurilishdan keyin" },
+};
+
+// ─── CHECKLISTS — SHORT LABELS ────────────────────────────────────────────────
+// Each item: { ru, en, uz, critical }
+// MAX ~28 chars per label so it fits in Telegram button
+
+const ZONES = ["Kitchen", "Bathroom", "Bedroom", "Living Room", "Hallway", "Windows"];
+
+const ZONE_LABELS = {
+  ru: { Kitchen: "🍳 Кухня", Bathroom: "🚿 Ванная", Bedroom: "🛏 Спальня", "Living Room": "🛋 Гостиная", Hallway: "🚪 Коридор", Windows: "🪟 Окна" },
+  en: { Kitchen: "🍳 Kitchen", Bathroom: "🚿 Bathroom", Bedroom: "🛏 Bedroom", "Living Room": "🛋 Living Room", Hallway: "🚪 Hallway", Windows: "🪟 Windows" },
+  uz: { Kitchen: "🍳 Oshxona", Bathroom: "🚿 Hammom", Bedroom: "🛏 Yotoqxona", "Living Room": "🛋 Mehmonxona", Hallway: "🚪 Koridor", Windows: "🪟 Derazalar" },
 };
 
 const CHECKLISTS = {
   deep: {
-    "🍳 Kitchen": [
-      { ru: "Обезжирить и вымыть плиту изнутри и снаружи", en: "Degrease and clean stove inside and out", uz: "Plitani ichidan va tashqaridan yog'sizlantirish", critical: true },
-      { ru: "Очистить духовку, включая противни и решётки", en: "Clean oven including trays and racks", uz: "Pechni tozalash (tegachlar va panjaralar)", critical: true },
-      { ru: "Вымыть холодильник изнутри, включая уплотнители", en: "Clean fridge inside including seals", uz: "Muzlatgichni ichidan tozalash (zichlashlar bilan)", critical: false },
-      { ru: "Обработать вытяжку и фильтры", en: "Clean exhaust hood and filters", uz: "Ventilyatsiya va filtrlarni tozalash", critical: false },
-      { ru: "Протереть все фасады, ручки и петли шкафов", en: "Wipe all cabinet doors, handles and hinges", uz: "Shkaf eshiklari, tutqichlari va piroqlarini artish", critical: false },
-      { ru: "Очистить микроволновку изнутри и снаружи", en: "Clean microwave inside and out", uz: "Mikrotolqinli pechni tozalash", critical: false },
-      { ru: "Почистить раковину и смеситель до блеска", en: "Polish sink and faucet to a shine", uz: "Lavabo va kranini yaltiratib tozalash", critical: true },
-      { ru: "Вымыть пол и плинтусы", en: "Mop floor and clean baseboards", uz: "Pol va plintuslarni yuvish", critical: false },
+    Kitchen: [
+      { ru: "Плита — снаружи и изнутри",         en: "Stove — outside & inside",       uz: "Plita — tashqi va ichki",        critical: true  },
+      { ru: "Духовка — противни и решётки",       en: "Oven — trays & racks",           uz: "Pech — tegachlar va panjaralar", critical: true  },
+      { ru: "Холодильник — изнутри",              en: "Fridge — inside",                uz: "Muzlatgich — ichidan",           critical: false },
+      { ru: "Вытяжка и фильтры",                  en: "Hood & filters",                 uz: "Ventilyatsiya va filtrlar",      critical: false },
+      { ru: "Фасады шкафов — ручки и петли",      en: "Cabinets — doors & handles",     uz: "Shkaflar — eshiklar va tutqich", critical: false },
+      { ru: "Микроволновка — внутри и снаружи",   en: "Microwave — inside & out",       uz: "Mikrotolqinli — ichidan",        critical: false },
+      { ru: "Раковина и кран — до блеска",        en: "Sink & faucet — polished",       uz: "Lavabo va kran — yaltiroq",      critical: true  },
+      { ru: "Пол и плинтусы",                     en: "Floor & baseboards",             uz: "Pol va plintuslar",              critical: false },
     ],
-    "🚿 Bathroom": [
-      { ru: "Удалить известковый налёт с кафеля и стекла", en: "Remove limescale from tiles and glass", uz: "Kafel va oynadan ohak dog'larini ketkazish", critical: true },
-      { ru: "Дезинфицировать унитаз снаружи и под ободком", en: "Disinfect toilet outside and under rim", uz: "Unitazni dezinfeksiyalash", critical: true },
-      { ru: "Очистить душевую кабину / ванну от налёта", en: "Clean shower/bathtub from soap scum", uz: "Dush kabinasi / vannani tozalash", critical: true },
-      { ru: "Вымыть зеркало без разводов", en: "Clean mirror without streaks", uz: "Oynani chiziqsiz yuvish", critical: false },
-      { ru: "Протереть все поверхности и полки", en: "Wipe all surfaces and shelves", uz: "Barcha yuzalar va javonlarni artish", critical: false },
-      { ru: "Вымыть пол и плинтусы", en: "Mop floor and clean baseboards", uz: "Pol va plintuslarni yuvish", critical: false },
+    Bathroom: [
+      { ru: "Кафель — известковый налёт",         en: "Tiles — limescale removed",      uz: "Kafel — ohak dog'lari",          critical: true  },
+      { ru: "Унитаз — снаружи и под ободком",     en: "Toilet — outside & under rim",   uz: "Unitaz — tashqi va ostidan",     critical: true  },
+      { ru: "Душ/ванна — мыльный налёт",          en: "Shower/tub — soap scum",         uz: "Dush/vanna — ko'pik izlari",     critical: true  },
+      { ru: "Зеркало — без разводов",             en: "Mirror — no streaks",            uz: "Oyna — chiziqsiz",               critical: false },
+      { ru: "Все поверхности и полки",            en: "All surfaces & shelves",         uz: "Barcha yuzalar va javonlar",     critical: false },
+      { ru: "Пол и плинтусы",                     en: "Floor & baseboards",             uz: "Pol va plintuslar",              critical: false },
     ],
-    "🛏 Bedroom": [
-      { ru: "Протереть пыль со всех поверхностей и мебели", en: "Dust all surfaces and furniture", uz: "Barcha yuzalar va mebeldan changini artish", critical: false },
-      { ru: "Пропылесосить матрас", en: "Vacuum the mattress", uz: "Matrasni changsos bilan tozalash", critical: false },
-      { ru: "Вымыть окна изнутри", en: "Clean windows from inside", uz: "Derazalarni ichidan yuvish", critical: false },
-      { ru: "Протереть плинтусы и вентиляционные решётки", en: "Wipe baseboards and vents", uz: "Plintuslar va ventilyatsiya panjaralarini artish", critical: false },
-      { ru: "Пропылесосить ковёр / вымыть пол", en: "Vacuum carpet / mop floor", uz: "Gilam changsos / pol yuvish", critical: true },
+    Bedroom: [
+      { ru: "Пыль — вся мебель и поверхности",   en: "Dust — all furniture & surfaces", uz: "Chang — mebel va yuzalar",       critical: false },
+      { ru: "Матрас — пылесос",                   en: "Mattress — vacuumed",            uz: "Matras — changsos",              critical: false },
+      { ru: "Окна — изнутри",                     en: "Windows — inside",               uz: "Derazalar — ichidan",            critical: false },
+      { ru: "Плинтусы и вентиляция",              en: "Baseboards & vents",             uz: "Plintuslar va ventilyatsiya",    critical: false },
+      { ru: "Пол/ковёр — пылесос и мытьё",       en: "Floor/carpet — vacuum & mop",    uz: "Pol/gilam — changsos va yuv",    critical: true  },
     ],
-    "🛋 Living Room": [
-      { ru: "Протереть пыль с мебели, полок и декора", en: "Dust furniture, shelves and decor", uz: "Mebel, javon va dekordan changini artish", critical: false },
-      { ru: "Пропылесосить диван и подушки", en: "Vacuum sofa and cushions", uz: "Divan va yostiqlarni changsos bilan tozalash", critical: false },
-      { ru: "Очистить телевизор и технику от пыли", en: "Dust TV and electronics", uz: "Televizor va texnikadan changini artish", critical: false },
-      { ru: "Вымыть пол, уделить внимание углам", en: "Mop floor, focus on corners", uz: "Polni yuvish, burchaklarga e'tibor berish", critical: true },
+    "Living Room": [
+      { ru: "Пыль — мебель, полки, декор",        en: "Dust — furniture & decor",       uz: "Chang — mebel va dekor",         critical: false },
+      { ru: "Диван и подушки — пылесос",          en: "Sofa & cushions — vacuum",       uz: "Divan va yostiqlar — changsos",  critical: false },
+      { ru: "ТВ и техника — пыль",                en: "TV & electronics — dust",        uz: "TV va texnika — chang",          critical: false },
+      { ru: "Пол — особенно углы",                en: "Floor — focus on corners",       uz: "Pol — burchaklarga e'tibor",     critical: true  },
     ],
-    "🚪 Hallway": [
-      { ru: "Протереть входную дверь и дверную ручку", en: "Wipe front door and handle", uz: "Kirish eshigi va tutqichini artish", critical: false },
-      { ru: "Вымыть пол и плинтусы", en: "Mop floor and baseboards", uz: "Pol va plintuslarni yuvish", critical: false },
-      { ru: "Протереть зеркало", en: "Clean mirror", uz: "Oynani artish", critical: false },
+    Hallway: [
+      { ru: "Входная дверь и ручка",              en: "Front door & handle",            uz: "Kirish eshigi va tutqich",       critical: false },
+      { ru: "Пол и плинтусы",                     en: "Floor & baseboards",             uz: "Pol va plintuslar",              critical: false },
+      { ru: "Зеркало",                            en: "Mirror",                         uz: "Oyna",                           critical: false },
     ],
-    "🪟 Windows": [
-      { ru: "Вымыть стёкла изнутри без разводов", en: "Clean glass inside without streaks", uz: "Oynalarni ichidan chiziqsiz yuvish", critical: true },
-      { ru: "Протереть рамы и подоконники", en: "Wipe frames and window sills", uz: "Ramalar va tokchalarni artish", critical: false },
-      { ru: "Очистить жалюзи / вытереть пыль с занавесей", en: "Clean blinds / dust curtains", uz: "Jaluzini tozalash / pardadan changini artish", critical: false },
+    Windows: [
+      { ru: "Стёкла изнутри — без разводов",      en: "Glass inside — no streaks",      uz: "Oynalar ichidan — chiziqsiz",    critical: true  },
+      { ru: "Рамы и подоконники",                 en: "Frames & sills",                 uz: "Ramalar va tokchalar",           critical: false },
+      { ru: "Жалюзи / занавеси — пыль",           en: "Blinds / curtains — dust",       uz: "Jaluzin / pardalar — chang",     critical: false },
     ],
   },
   regular: {
-    "🍳 Kitchen": [
-      { ru: "Протереть плиту снаружи", en: "Wipe stove exterior", uz: "Plitani tashqaridan artish", critical: true },
-      { ru: "Протереть все поверхности и столешницу", en: "Wipe all surfaces and countertop", uz: "Barcha yuzalar va stolüstini artish", critical: false },
-      { ru: "Почистить раковину и смеситель", en: "Clean sink and faucet", uz: "Lavabo va kranini tozalash", critical: true },
-      { ru: "Вымыть пол", en: "Mop floor", uz: "Polni yuvish", critical: false },
-      { ru: "Вынести мусор", en: "Take out trash", uz: "Axlatni olib chiqish", critical: false },
+    Kitchen: [
+      { ru: "Плита — снаружи",                    en: "Stove — outside",                uz: "Plita — tashqidan",              critical: true  },
+      { ru: "Столешница и поверхности",           en: "Countertop & surfaces",          uz: "Stolüsti va yuzalar",            critical: false },
+      { ru: "Раковина и кран",                    en: "Sink & faucet",                  uz: "Lavabo va kran",                 critical: true  },
+      { ru: "Пол",                                en: "Floor",                          uz: "Pol",                            critical: false },
+      { ru: "Мусор — вынести",                    en: "Trash — taken out",              uz: "Axlat — olib chiqish",           critical: false },
     ],
-    "🚿 Bathroom": [
-      { ru: "Дезинфицировать унитаз", en: "Disinfect toilet", uz: "Unitazni dezinfeksiyalash", critical: true },
-      { ru: "Протереть раковину и смеситель", en: "Wipe sink and faucet", uz: "Lavabo va kranini artish", critical: true },
-      { ru: "Вымыть зеркало", en: "Clean mirror", uz: "Oynani yuvish", critical: false },
-      { ru: "Вымыть пол", en: "Mop floor", uz: "Polni yuvish", critical: false },
+    Bathroom: [
+      { ru: "Унитаз — дезинфекция",               en: "Toilet — disinfected",           uz: "Unitaz — dezinfeksiya",          critical: true  },
+      { ru: "Раковина и кран",                    en: "Sink & faucet",                  uz: "Lavabo va kran",                 critical: true  },
+      { ru: "Зеркало",                            en: "Mirror",                         uz: "Oyna",                           critical: false },
+      { ru: "Пол",                                en: "Floor",                          uz: "Pol",                            critical: false },
     ],
-    "🛏 Bedroom": [
-      { ru: "Протереть пыль с поверхностей", en: "Dust surfaces", uz: "Yuzalardan changini artish", critical: false },
-      { ru: "Пропылесосить / вымыть пол", en: "Vacuum / mop floor", uz: "Changsos / pol yuvish", critical: true },
+    Bedroom: [
+      { ru: "Пыль с поверхностей",                en: "Dust surfaces",                  uz: "Yuzalardan chang",               critical: false },
+      { ru: "Пол/ковёр — пылесос и мытьё",       en: "Floor/carpet — vacuum & mop",    uz: "Pol/gilam — changsos va yuv",    critical: true  },
     ],
-    "🛋 Living Room": [
-      { ru: "Протереть пыль", en: "Dust surfaces", uz: "Changini artish", critical: false },
-      { ru: "Вымыть пол", en: "Mop floor", uz: "Polni yuvish", critical: true },
+    "Living Room": [
+      { ru: "Пыль с поверхностей",                en: "Dust surfaces",                  uz: "Yuzalardan chang",               critical: false },
+      { ru: "Пол",                                en: "Floor",                          uz: "Pol",                            critical: true  },
     ],
-    "🚪 Hallway": [
-      { ru: "Подмести / вымыть пол", en: "Sweep / mop floor", uz: "Supurish / pol yuvish", critical: false },
+    Hallway: [
+      { ru: "Пол — подмести и вымыть",            en: "Floor — sweep & mop",            uz: "Pol — supurish va yuvish",       critical: false },
     ],
-    "🪟 Windows": [
-      { ru: "Протереть подоконники", en: "Wipe window sills", uz: "Tokchalarni artish", critical: false },
+    Windows: [
+      { ru: "Подоконники",                        en: "Window sills",                   uz: "Tokchalar",                      critical: false },
     ],
   },
   moveinout: {
-    "🍳 Kitchen": [
-      { ru: "Полная очистка духовки и плиты изнутри", en: "Full oven and stove cleaning inside", uz: "Pech va plitani ichidan to'liq tozalash", critical: true },
-      { ru: "Вымыть холодильник изнутри", en: "Clean fridge inside", uz: "Muzlatgichni ichidan yuvish", critical: true },
-      { ru: "Очистить все шкафы внутри и снаружи", en: "Clean all cabinets inside and out", uz: "Barcha shkaflarni tozalash", critical: true },
-      { ru: "Обработать вытяжку", en: "Clean exhaust hood", uz: "Ventilyatsiyani tozalash", critical: false },
-      { ru: "Вымыть пол и плинтусы", en: "Mop floor and baseboards", uz: "Pol va plintuslarni yuvish", critical: false },
+    Kitchen: [
+      { ru: "Духовка и плита — изнутри полная",   en: "Oven & stove — full inside",     uz: "Pech va plita — to'liq ichki",   critical: true  },
+      { ru: "Холодильник — изнутри",              en: "Fridge — inside",                uz: "Muzlatgich — ichidan",           critical: true  },
+      { ru: "Все шкафы — внутри и снаружи",       en: "All cabinets — inside & out",    uz: "Barcha shkaflar — ichki/tashqi", critical: true  },
+      { ru: "Вытяжка",                            en: "Hood",                           uz: "Ventilyatsiya",                  critical: false },
+      { ru: "Пол и плинтусы",                     en: "Floor & baseboards",             uz: "Pol va plintuslar",              critical: false },
     ],
-    "🚿 Bathroom": [
-      { ru: "Полная дезинфекция всех поверхностей", en: "Full disinfection of all surfaces", uz: "Barcha yuzalarni dezinfeksiyalash", critical: true },
-      { ru: "Удаление плесени и налёта", en: "Remove mold and limescale", uz: "Mog'or va ohak dog'larini ketkazish", critical: true },
-      { ru: "Вымыть пол", en: "Mop floor", uz: "Polni yuvish", critical: false },
+    Bathroom: [
+      { ru: "Все поверхности — полная дезинфекция", en: "All surfaces — full disinfect", uz: "Barcha yuzalar — dezinfeksiya", critical: true  },
+      { ru: "Плесень и налёт — удалить",          en: "Mold & limescale — removed",     uz: "Mog'or va ohak — ketkazish",     critical: true  },
+      { ru: "Пол",                                en: "Floor",                          uz: "Pol",                            critical: false },
     ],
-    "🛏 Bedroom": [
-      { ru: "Очистить шкафы и полки изнутри", en: "Clean wardrobes and shelves inside", uz: "Shkaf va javonlarni ichidan tozalash", critical: true },
-      { ru: "Пропылесосить и вымыть пол", en: "Vacuum and mop floor", uz: "Changsos va pol yuvish", critical: true },
-      { ru: "Вымыть окна", en: "Clean windows", uz: "Derazalarni yuvish", critical: false },
+    Bedroom: [
+      { ru: "Шкафы и полки — изнутри",            en: "Wardrobes & shelves — inside",   uz: "Shkaflar va javonlar — ichki",   critical: true  },
+      { ru: "Пол — пылесос и мытьё",              en: "Floor — vacuum & mop",           uz: "Pol — changsos va yuvish",       critical: true  },
+      { ru: "Окна",                               en: "Windows",                        uz: "Derazalar",                      critical: false },
     ],
-    "🛋 Living Room": [
-      { ru: "Полная очистка всех поверхностей", en: "Full cleaning of all surfaces", uz: "Barcha yuzalarni to'liq tozalash", critical: false },
-      { ru: "Вымыть пол", en: "Mop floor", uz: "Polni yuvish", critical: true },
+    "Living Room": [
+      { ru: "Все поверхности — полная чистка",    en: "All surfaces — full clean",      uz: "Barcha yuzalar — to'liq tozalash", critical: false },
+      { ru: "Пол",                                en: "Floor",                          uz: "Pol",                            critical: true  },
     ],
-    "🚪 Hallway": [
-      { ru: "Протереть входную дверь снаружи и изнутри", en: "Wipe front door outside and inside", uz: "Kirish eshigini tozalash", critical: false },
-      { ru: "Вымыть пол", en: "Mop floor", uz: "Polni yuvish", critical: false },
+    Hallway: [
+      { ru: "Входная дверь — снаружи и изнутри",  en: "Front door — outside & inside",  uz: "Kirish eshigi — ikki tomon",     critical: false },
+      { ru: "Пол",                                en: "Floor",                          uz: "Pol",                            critical: false },
     ],
-    "🪟 Windows": [
-      { ru: "Вымыть все окна изнутри", en: "Clean all windows inside", uz: "Barcha derazalarni yuvish", critical: true },
-      { ru: "Протереть рамы и подоконники", en: "Wipe frames and sills", uz: "Ramalar va tokchalarni artish", critical: false },
+    Windows: [
+      { ru: "Все стёкла изнутри",                 en: "All glass — inside",             uz: "Barcha oynalar — ichidan",       critical: true  },
+      { ru: "Рамы и подоконники",                 en: "Frames & sills",                 uz: "Ramalar va tokchalar",           critical: false },
     ],
   },
   postconstruction: {
-    "🍳 Kitchen": [
-      { ru: "Удалить строительную пыль со всех поверхностей", en: "Remove construction dust from all surfaces", uz: "Barcha yuzalardan qurilish changini ketkazish", critical: true },
-      { ru: "Очистить технику от защитных плёнок", en: "Remove protective films from appliances", uz: "Texnikadan himoya plyonkalarini olib tashlash", critical: false },
-      { ru: "Вымыть пол с обезжиривателем", en: "Mop floor with degreaser", uz: "Polni yog'sizlantirgich bilan yuvish", critical: true },
+    Kitchen: [
+      { ru: "Строительная пыль — все поверхности", en: "Construction dust — all surfaces", uz: "Qurilish changi — barcha yuzalar", critical: true },
+      { ru: "Техника — снять защитные плёнки",    en: "Appliances — remove films",      uz: "Texnika — plyonkalarni olish",   critical: false },
+      { ru: "Пол — обезжириватель",               en: "Floor — degreaser",              uz: "Pol — yog'sizlantirgich",        critical: true  },
     ],
-    "🚿 Bathroom": [
-      { ru: "Удалить остатки затирки и раствора", en: "Remove grout and mortar residue", uz: "Grout va tsement qoldiqlarini ketkazish", critical: true },
-      { ru: "Протереть новую сантехнику", en: "Wipe new plumbing fixtures", uz: "Yangi santexnikani artish", critical: false },
-      { ru: "Вымыть пол", en: "Mop floor", uz: "Polni yuvish", critical: true },
+    Bathroom: [
+      { ru: "Затирка и раствор — остатки убрать", en: "Grout & mortar — residue off",   uz: "Grout va tsement — qoldiqlar",   critical: true  },
+      { ru: "Новая сантехника — протереть",       en: "New plumbing — wipe down",       uz: "Yangi santexnika — artish",      critical: false },
+      { ru: "Пол",                                en: "Floor",                          uz: "Pol",                            critical: true  },
     ],
-    "🛏 Bedroom": [
-      { ru: "Протереть пыль со всех поверхностей (2 этапа)", en: "Dust all surfaces (2 rounds)", uz: "Barcha yuzalardan changini artish (2 bosqich)", critical: true },
-      { ru: "Пропылесосить и вымыть пол", en: "Vacuum and mop floor", uz: "Changsos va pol yuvish", critical: true },
+    Bedroom: [
+      { ru: "Пыль — 2 этапа, все поверхности",   en: "Dust — 2 rounds, all surfaces",  uz: "Chang — 2 bosqich, barcha yuzalar", critical: true },
+      { ru: "Пол — пылесос и мытьё",              en: "Floor — vacuum & mop",           uz: "Pol — changsos va yuvish",       critical: true  },
     ],
-    "🛋 Living Room": [
-      { ru: "Двойная протирка всех горизонтальных поверхностей", en: "Double wipe all horizontal surfaces", uz: "Barcha gorizontal yuzalarni ikki marta artish", critical: true },
-      { ru: "Вымыть пол с обезжиривателем", en: "Mop floor with degreaser", uz: "Polni yog'sizlantirgich bilan yuvish", critical: true },
+    "Living Room": [
+      { ru: "Горизонтальные поверхности — 2x",   en: "Horizontal surfaces — 2x wipe",  uz: "Gorizontal yuzalar — 2 marta",   critical: true  },
+      { ru: "Пол — обезжириватель",               en: "Floor — degreaser",              uz: "Pol — yog'sizlantirgich",        critical: true  },
     ],
-    "🚪 Hallway": [
-      { ru: "Убрать строительный мусор", en: "Remove construction debris", uz: "Qurilish axlatini olib chiqish", critical: true },
-      { ru: "Вымыть пол", en: "Mop floor", uz: "Polni yuvish", critical: false },
+    Hallway: [
+      { ru: "Строительный мусор — убрать",        en: "Construction debris — removed",  uz: "Qurilish axlati — olib chiqish", critical: true  },
+      { ru: "Пол",                                en: "Floor",                          uz: "Pol",                            critical: false },
     ],
-    "🪟 Windows": [
-      { ru: "Удалить наклейки и цемент со стёкол", en: "Remove stickers and cement from glass", uz: "Oynalardan stikerlar va tsementni ketkazish", critical: true },
-      { ru: "Вымыть стёкла и рамы", en: "Clean glass and frames", uz: "Oynalar va ramalarni yuvish", critical: true },
+    Windows: [
+      { ru: "Стёкла — наклейки и цемент убрать", en: "Glass — stickers & cement off",  uz: "Oynalar — stikerlar va tsement", critical: true  },
+      { ru: "Стёкла и рамы — вымыть",            en: "Glass & frames — washed",        uz: "Oynalar va ramalar — yuvish",    critical: true  },
     ],
   },
 };
 
 const CRITICAL_FINAL = {
-  ru: ["Унитаз дезинфицирован (нет запаха, нет загрязнений)", "Плита / духовка очищена", "Полы вымыты во всех зонах", "Фото «до» и «после» загружены", "Раковина без налёта", "Химикаты смыты, нет запаха", "Мусор вынесен", "Зеркала без разводов"],
-  en: ["Toilet disinfected (no smell, no dirt)", "Stove / oven cleaned", "Floors mopped in all zones", "Before and after photos uploaded", "Sink free of limescale", "Chemicals rinsed, no smell", "Trash taken out", "Mirrors streak-free"],
-  uz: ["Unitaz dezinfeksiyalangan (hid yo'q, kir yo'q)", "Plita / pech tozalangan", "Barcha zonalarda pol yuvilgan", "Oldin va keyin suratlari yuklangan", "Lavabo ohaklardan tozalangan", "Kimyoviy moddalar yuvib tashlangan", "Axlat olib chiqilgan", "Oynalarda chiziq yo'q"],
+  ru: [
+    "Унитаз — нет запаха и загрязнений",
+    "Плита/духовка — очищена",
+    "Полы вымыты во всех зонах",
+    "Фото до и после — загружены",
+    "Раковина — без налёта",
+    "Химикаты смыты, нет запаха",
+    "Мусор — вынесен",
+    "Зеркала — без разводов",
+  ],
+  en: [
+    "Toilet — no smell, no dirt",
+    "Stove/oven — cleaned",
+    "Floors mopped in all zones",
+    "Before & after photos — uploaded",
+    "Sink — no limescale",
+    "Chemicals rinsed, no smell",
+    "Trash — taken out",
+    "Mirrors — no streaks",
+  ],
+  uz: [
+    "Unitaz — hid yo'q, kir yo'q",
+    "Plita/pech — tozalangan",
+    "Barcha zonalarda pol yuvilgan",
+    "Oldin va keyin suratlari — yuklangan",
+    "Lavabo — ohaklardan toza",
+    "Kimyoviy moddalar yuvib tashlangan",
+    "Axlat — olib chiqilgan",
+    "Oynalar — chiziq yo'q",
+  ],
 };
 
-// ─── СЕССИИ И ХЕЛПЕРЫ ────────────────────────────────────────────────────────
+// ─── SESSION & HELPERS ────────────────────────────────────────────────────────
 
 const sessions = {};
 const cleaners = {}; // chatId → { name, lang }
 
-function getSession(chatId) {
-  if (!sessions[chatId]) sessions[chatId] = { step: "idle", service: null, zones: [], currentZone: null, checked: {}, photoBefore: [], photoAfter: [], criticalDone: {}, startedAt: null, address: null };
-  return sessions[chatId];
+function sess(id) {
+  if (!sessions[id]) sessions[id] = { step: "idle", service: null, zoneIdx: 0, checked: {}, photoBefore: [], photoAfter: [], criticalDone: {}, startedAt: null, address: null };
+  return sessions[id];
 }
-function resetSession(chatId) { sessions[chatId] = null; return getSession(chatId); }
-function getLang(chatId) { return (cleaners[chatId] && cleaners[chatId].lang) || "ru"; }
-function getName(chatId) { return (cleaners[chatId] && cleaners[chatId].name) || ""; }
-function tr(chatId, key, ...args) { const lang = getLang(chatId); const fn = T[lang][key]; return typeof fn === "function" ? fn(...args) : fn; }
-function progressBar(done, total) { const f = total ? Math.round((done / total) * 8) : 0; return "█".repeat(f) + "░".repeat(8 - f) + ` ${done}/${total}`; }
-function getItemText(item, lang) { return item[lang] || item.ru; }
+function resetSess(id) { sessions[id] = null; return sess(id); }
+function lang(id)  { return (cleaners[id] && cleaners[id].lang) || "ru"; }
+function name(id)  { return (cleaners[id] && cleaners[id].name) || ""; }
+function tr(id, key, ...a) { const fn = T[lang(id)][key]; return typeof fn === "function" ? fn(...a) : fn; }
+function bar(done, total)  { const f = total ? Math.round(done/total*8) : 0; return "█".repeat(f) + "░".repeat(8-f) + ` ${done}/${total}`; }
 
-// ─── КЛАВИАТУРЫ ───────────────────────────────────────────────────────────────
+// ─── KEYBOARDS ────────────────────────────────────────────────────────────────
 
-function langKeyboard() {
-  return { inline_keyboard: [
-    [{ text: "🇷🇺 Русский", callback_data: "lang_ru" }],
-    [{ text: "🇺🇸 English", callback_data: "lang_en" }],
-    [{ text: "🇺🇿 O'zbek", callback_data: "lang_uz" }],
-  ]};
-}
+const langKbd = () => ({ inline_keyboard: [
+  [{ text: "🇷🇺 Русский", callback_data: "L_ru" }],
+  [{ text: "🇺🇸 English", callback_data: "L_en" }],
+  [{ text: "🇺🇿 O'zbek",  callback_data: "L_uz" }],
+]});
 
-function serviceKbd(chatId) {
-  const lang = getLang(chatId);
-  return { inline_keyboard: Object.entries(SERVICES[lang]).map(([k, v]) => [{ text: v, callback_data: `svc_${k}` }]) };
+function svcKbd(id) {
+  return { inline_keyboard: Object.entries(SERVICES[lang(id)]).map(([k,v]) => [{ text: v, callback_data: `S_${k}` }]) };
 }
 
-function zonesKbd(chatId, session) {
-  const rows = session.zones.map(zone => {
-    const items = CHECKLISTS[session.service][zone];
-    const ch = session.checked[zone] || [];
-    const done = ch.filter(Boolean).length;
-    const icon = done === items.length ? "✅" : done > 0 ? "🔄" : "⬜";
-    return [{ text: `${icon} ${zone} (${done}/${items.length})`, callback_data: `zone_${zone}` }];
+function zonesKbd(id, s) {
+  const l = lang(id);
+  const rows = ZONES.map((z, i) => {
+    const items = (CHECKLISTS[s.service] || {})[z] || [];
+    const ch    = s.checked[z] || [];
+    const done  = ch.filter(Boolean).length;
+    const icon  = done === items.length ? "✅" : done > 0 ? "🔄" : "⬜";
+    return [{ text: `${icon} ${ZONE_LABELS[l][z]} (${done}/${items.length})`, callback_data: `Z_${i}` }];
   });
-  const allDone = session.zones.every(z => (session.checked[z] || []).filter(Boolean).length === CHECKLISTS[session.service][z].length);
-  if (allDone) rows.push([{ text: tr(chatId, "allZonesDone"), callback_data: "goto_photo_after" }]);
+  const allDone = ZONES.every(z => {
+    const items = (CHECKLISTS[s.service] || {})[z] || [];
+    return (s.checked[z] || []).filter(Boolean).length === items.length;
+  });
+  if (allDone) rows.push([{ text: tr(id, "allDone"), callback_data: "PHOTO_AFTER" }]);
   return { inline_keyboard: rows };
 }
 
-function checklistKbd(chatId, session, zone) {
-  const lang = getLang(chatId);
-  const items = CHECKLISTS[session.service][zone];
-  if (!session.checked[zone]) session.checked[zone] = Array(items.length).fill(false);
-  const ch = session.checked[zone];
+function checkKbd(id, s, zone) {
+  const l     = lang(id);
+  const items = (CHECKLISTS[s.service] || {})[zone] || [];
+  if (!s.checked[zone]) s.checked[zone] = Array(items.length).fill(false);
+  const ch   = s.checked[zone];
   const rows = items.map((item, i) => {
-    const icon = ch[i] ? "✅" : item.critical ? "🔴" : "⬜";
-    const label = getItemText(item, lang).slice(0, 40);
-    return [{ text: `${icon} ${label}`, callback_data: `chk_${i}_${zone}` }];
+    const icon  = ch[i] ? "✅" : item.critical ? "🔴" : "⬜";
+    const label = item[l] || item.ru;
+    return [{ text: `${icon} ${label}`, callback_data: `C_${i}` }];
   });
   const done = ch.filter(Boolean).length;
   rows.push([
-    { text: tr(chatId, "backZones"), callback_data: "back_zones" },
-    { text: done === items.length ? tr(chatId, "zoneDone") : tr(chatId, "zoneProgress", done, items.length), callback_data: done === items.length ? "zone_complete" : "zone_incomplete" },
+    { text: tr(id, "back"),       callback_data: "BACK_ZONES" },
+    { text: done === items.length ? tr(id, "zoneDone") : tr(id, "inProgress", done, items.length), callback_data: "BACK_ZONES" },
   ]);
   return { inline_keyboard: rows };
 }
 
-function criticalKbd(chatId, session) {
-  const lang = getLang(chatId);
-  const items = CRITICAL_FINAL[lang];
-  const rows = items.map((item, i) => [{ text: `${session.criticalDone[i] ? "✅" : "⬜"} ${item}`, callback_data: `crit_${i}` }]);
-  if (items.every((_, i) => session.criticalDone[i])) rows.push([{ text: tr(chatId, "finishBtn"), callback_data: "finish_order" }]);
+function critKbd(id, s) {
+  const l     = lang(id);
+  const items = CRITICAL_FINAL[l];
+  const rows  = items.map((item, i) => [{ text: `${s.criticalDone[i] ? "✅" : "⬜"} ${item}`, callback_data: `K_${i}` }]);
+  if (items.every((_, i) => s.criticalDone[i])) rows.push([{ text: tr(id, "finishBtn"), callback_data: "FINISH" }]);
   return { inline_keyboard: rows };
 }
 
-// ─── ОТЧЁТ ───────────────────────────────────────────────────────────────────
+// ─── REPORT ───────────────────────────────────────────────────────────────────
 
-async function sendReport(chatId, session, user) {
+async function sendReport(id, s, user) {
   if (!ADMIN_ID) return;
-  const lang = getLang(chatId);
-  const svc = SERVICES[lang][session.service];
-  const dur = session.startedAt ? Math.round((Date.now() - session.startedAt) / 60000) : "—";
-  const name = getName(chatId) || user.first_name;
-  let zones = "";
-  for (const z of session.zones) {
-    const ch = session.checked[z] || [];
-    zones += `${z}: ${ch.filter(Boolean).length}/${CHECKLISTS[session.service][z].length}\n`;
+  const l    = lang(id);
+  const svc  = SERVICES[l][s.service];
+  const dur  = s.startedAt ? Math.round((Date.now() - s.startedAt) / 60000) : "—";
+  const nm   = name(id) || user.first_name;
+  let zones  = "";
+  for (const z of ZONES) {
+    const items = (CHECKLISTS[s.service] || {})[z] || [];
+    if (!items.length) continue;
+    zones += `${ZONE_LABELS[l][z]}: ${(s.checked[z]||[]).filter(Boolean).length}/${items.length}\n`;
   }
-  const text = tr(chatId, "reportHeader", name, user.username || "—", session.address || "—", svc, LANG_NAMES[lang], dur) + `${tr(chatId, "zoneReport")}\n${zones}` + tr(chatId, "reportPhoto", session.photoBefore.length, session.photoAfter.length);
-  await bot.sendMessage(ADMIN_ID, text, { parse_mode: "Markdown" });
-  if (session.photoBefore.length > 0) { await bot.sendMessage(ADMIN_ID, tr(chatId, "photoBefore"), { parse_mode: "Markdown" }); for (const f of session.photoBefore) await bot.sendPhoto(ADMIN_ID, f); }
-  if (session.photoAfter.length > 0) { await bot.sendMessage(ADMIN_ID, tr(chatId, "photoAfterLbl"), { parse_mode: "Markdown" }); for (const f of session.photoAfter) await bot.sendPhoto(ADMIN_ID, f); }
+  const txt = tr(id, "rptHdr", nm, user.username||"—", s.address||"—", svc, LANG_NAMES[l], dur)
+            + `${tr(id, "rptZones")}\n${zones}`
+            + tr(id, "rptPhoto", s.photoBefore.length, s.photoAfter.length);
+  await bot.sendMessage(ADMIN_ID, txt, { parse_mode: "Markdown" });
+  if (s.photoBefore.length) { await bot.sendMessage(ADMIN_ID, tr(id, "lblBefore"), { parse_mode: "Markdown" }); for (const f of s.photoBefore) await bot.sendPhoto(ADMIN_ID, f); }
+  if (s.photoAfter.length)  { await bot.sendMessage(ADMIN_ID, tr(id, "lblAfter"),  { parse_mode: "Markdown" }); for (const f of s.photoAfter)  await bot.sendPhoto(ADMIN_ID, f); }
+}
+
+// ─── ZONE VIEW ────────────────────────────────────────────────────────────────
+
+async function showZone(id, msgId, s) {
+  const l    = lang(id);
+  const zone = ZONES[s.zoneIdx];
+  if (!s.checked[zone]) s.checked[zone] = Array(((CHECKLISTS[s.service]||{})[zone]||[]).length).fill(false);
+  const done  = s.checked[zone].filter(Boolean).length;
+  const total = ((CHECKLISTS[s.service]||{})[zone]||[]).length;
+  const text  = tr(id, "zoneTitle", ZONE_LABELS[l][zone], bar(done, total));
+  await bot.editMessageText(text, { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: checkKbd(id, s, zone) });
+}
+
+async function showZones(id, msgId, s) {
+  const l      = lang(id);
+  const svcNm  = SERVICES[l][s.service];
+  const total  = ZONES.reduce((acc, z) => acc + ((CHECKLISTS[s.service]||{})[z]||[]).length, 0);
+  const done   = ZONES.reduce((acc, z) => acc + (s.checked[z]||[]).filter(Boolean).length, 0);
+  await bot.editMessageText(tr(id, "step2", svcNm, bar(done, total)), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: zonesKbd(id, s) });
 }
 
 // ─── /start ───────────────────────────────────────────────────────────────────
 
 bot.onText(/\/start/, async (msg) => {
-  const chatId = msg.chat.id;
-  resetSession(chatId);
-  if (cleaners[chatId] && cleaners[chatId].name) {
-    const s = getSession(chatId);
-    s.step = "await_address";
+  const id = msg.chat.id;
+  resetSess(id);
+  if (cleaners[id] && cleaners[id].name) {
+    const s = sess(id);
+    s.step = "addr";
     s.startedAt = Date.now();
-    await bot.sendMessage(chatId, tr(chatId, "welcome", getName(chatId)), { parse_mode: "Markdown" });
+    await bot.sendMessage(id, tr(id, "welcome", name(id)), { parse_mode: "Markdown" });
   } else {
-    await bot.sendMessage(chatId, T.ru.askLang, { reply_markup: langKeyboard() });
+    await bot.sendMessage(id, T.ru.askLang, { reply_markup: langKbd() });
   }
 });
 
-// ─── СООБЩЕНИЯ ───────────────────────────────────────────────────────────────
+// ─── MESSAGES ─────────────────────────────────────────────────────────────────
 
 bot.on("message", async (msg) => {
-  const chatId = msg.chat.id;
-  const session = getSession(chatId);
+  const id = msg.chat.id;
+  const s  = sess(id);
 
   if (msg.photo) {
-    const fileId = msg.photo[msg.photo.length - 1].file_id;
-    if (session.step === "photo_before") {
-      session.photoBefore.push(fileId);
-      await bot.sendMessage(chatId, tr(chatId, "photoReceived", session.photoBefore.length), { reply_markup: { inline_keyboard: [[{ text: tr(chatId, "startCleaningBtn", session.photoBefore.length), callback_data: "start_cleaning" }]] } });
-    } else if (session.step === "photo_after") {
-      session.photoAfter.push(fileId);
-      await bot.sendMessage(chatId, tr(chatId, "photoAfterReceived", session.photoAfter.length), { reply_markup: { inline_keyboard: [[{ text: tr(chatId, "gotoCriticalBtn", session.photoAfter.length), callback_data: "goto_critical" }]] } });
+    const fid = msg.photo[msg.photo.length - 1].file_id;
+    if (s.step === "photo_before") {
+      s.photoBefore.push(fid);
+      await bot.sendMessage(id, tr(id, "photoBeforeGot", s.photoBefore.length), { reply_markup: { inline_keyboard: [[{ text: tr(id, "startPhoto", s.photoBefore.length), callback_data: "START_CLEAN" }]] } });
+    } else if (s.step === "photo_after") {
+      s.photoAfter.push(fid);
+      await bot.sendMessage(id, tr(id, "photoAfterGot", s.photoAfter.length), { reply_markup: { inline_keyboard: [[{ text: tr(id, "gotoCritN", s.photoAfter.length), callback_data: "CRIT" }]] } });
     }
     return;
   }
 
   if (!msg.text || msg.text.startsWith("/start")) return;
 
-  if (session.step === "await_name") {
-    cleaners[chatId].name = msg.text.trim();
-    session.step = "await_address";
-    session.startedAt = Date.now();
-    await bot.sendMessage(chatId, tr(chatId, "welcome", getName(chatId)), { parse_mode: "Markdown" });
-    return;
-  }
-
-  if (session.step === "await_address") {
-    if (msg.text !== "/skip") session.address = msg.text.trim();
-    session.step = "select_service";
-    await bot.sendMessage(chatId, tr(chatId, "chooseService"), { reply_markup: serviceKbd(chatId) });
-  }
-});
-
-// ─── CALLBACK ─────────────────────────────────────────────────────────────────
-
-bot.on("callback_query", async (query) => {
-  const chatId = query.message.chat.id;
-  const msgId = query.message.message_id;
-  const data = query.data;
-  const session = getSession(chatId);
-  await bot.answerCallbackQuery(query.id);
-
-  if (data.startsWith("lang_")) {
-    const lang = data.replace("lang_", "");
-    cleaners[chatId] = { lang, name: null };
-    getSession(chatId).step = "await_name";
-    await bot.editMessageText(T[lang].askName, { chat_id: chatId, message_id: msgId });
-    return;
-  }
-
-  if (data.startsWith("svc_")) {
-    const key = data.replace("svc_", "");
-    Object.assign(session, { service: key, zones: Object.keys(CHECKLISTS[key]), checked: {}, photoBefore: [], photoAfter: [], criticalDone: {}, step: "photo_before" });
-    await bot.editMessageText(tr(chatId, "photoBeforeTitle", SERVICES[getLang(chatId)][key]), { chat_id: chatId, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(chatId, "startWithoutPhoto"), callback_data: "start_cleaning" }]] } });
-    return;
-  }
-
-  if (data === "start_cleaning") {
-    session.step = "zones";
-    const total = session.zones.reduce((s, z) => s + CHECKLISTS[session.service][z].length, 0);
-    await bot.editMessageText(tr(chatId, "step2title", SERVICES[getLang(chatId)][session.service], progressBar(0, total)), { chat_id: chatId, message_id: msgId, parse_mode: "Markdown", reply_markup: zonesKbd(chatId, session) });
-    return;
-  }
-
-  if (data.startsWith("zone_")) {
-    const zone = data.replace("zone_", "");
-    session.currentZone = zone;
-    session.step = "checklist";
-    if (!session.checked[zone]) session.checked[zone] = Array(CHECKLISTS[session.service][zone].length).fill(false);
-    const done = session.checked[zone].filter(Boolean).length;
-    const total = CHECKLISTS[session.service][zone].length;
-    await bot.editMessageText(`*${zone}*\n${progressBar(done, total)}\n\n${tr(chatId, "criticalHint")}`, { chat_id: chatId, message_id: msgId, parse_mode: "Markdown", reply_markup: checklistKbd(chatId, session, zone) });
-    return;
-  }
-
-  if (data.startsWith("chk_")) {
-    const parts = data.split("_");
-    const idx = parseInt(parts[1]);
-    const zone = parts.slice(2).join("_");
-    if (!session.checked[zone]) session.checked[zone] = Array(CHECKLISTS[session.service][zone].length).fill(false);
-    session.checked[zone][idx] = !session.checked[zone][idx];
-    const done = session.checked[zone].filter(Boolean).length;
-    const total = CHECKLISTS[session.service][zone].length;
-    await bot.editMessageText(`*${zone}*\n${progressBar(done, total)}\n\n${tr(chatId, "criticalHint")}`, { chat_id: chatId, message_id: msgId, parse_mode: "Markdown", reply_markup: checklistKbd(chatId, session, zone) });
-    return;
-  }
-
-  if (data === "back_zones" || data === "zone_complete" || data === "zone_incomplete") {
-    session.step = "zones";
-    const total = session.zones.reduce((s, z) => s + CHECKLISTS[session.service][z].length, 0);
-    const done = session.zones.reduce((s, z) => s + (session.checked[z] || []).filter(Boolean).length, 0);
-    await bot.editMessageText(tr(chatId, "step2title", SERVICES[getLang(chatId)][session.service], progressBar(done, total)), { chat_id: chatId, message_id: msgId, parse_mode: "Markdown", reply_markup: zonesKbd(chatId, session) });
-    return;
-  }
-
-  if (data === "goto_photo_after") {
-    session.step = "photo_after";
-    session.photoAfter = [];
-    await bot.editMessageText(tr(chatId, "photoAfterTitle"), { chat_id: chatId, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(chatId, "gotoCritical"), callback_data: "goto_critical" }]] } });
-    return;
-  }
-
-  if (data === "goto_critical") {
-    session.step = "critical";
-    const done = Object.values(session.criticalDone).filter(Boolean).length;
-    const total = CRITICAL_FINAL[getLang(chatId)].length;
-    await bot.editMessageText(tr(chatId, "criticalTitle", session.photoAfter.length, progressBar(done, total)), { chat_id: chatId, message_id: msgId, parse_mode: "Markdown", reply_markup: criticalKbd(chatId, session) });
-    return;
-  }
-
-  if (data.startsWith("crit_")) {
-    const idx = parseInt(data.replace("crit_", ""));
-    session.criticalDone[idx] = !session.criticalDone[idx];
-    const done = Object.values(session.criticalDone).filter(Boolean).length;
-    const total = CRITICAL_FINAL[getLang(chatId)].length;
-    await bot.editMessageText(tr(chatId, "criticalTitle", session.photoAfter.length, progressBar(done, total)), { chat_id: chatId, message_id: msgId, parse_mode: "Markdown", reply_markup: criticalKbd(chatId, session) });
-    return;
-  }
-
-  if (data === "finish_order") {
-    const dur = session.startedAt ? Math.round((Date.now() - session.startedAt) / 60000) : "—";
-    await bot.editMessageText(tr(chatId, "finished", getName(chatId) || query.from.first_name, SERVICES[getLang(chatId)][session.service], dur, session.address || "—", session.photoBefore.length, session.photoAfter.length), { chat_id: chatId, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(chatId, "newOrder"), callback_data: "new_order" }]] } });
-    await sendReport(chatId, session, query.from);
-    resetSession(chatId);
-    return;
-  }
-
-  if (data === "new_order") {
-    const s = resetSession(chatId);
-    s.step = "await_address";
+  if (s.step === "name") {
+    cleaners[id].name = msg.text.trim();
+    s.step = "addr";
     s.startedAt = Date.now();
-    await bot.sendMessage(chatId, tr(chatId, "newOrderPrompt"));
+    await bot.sendMessage(id, tr(id, "welcome", name(id)), { parse_mode: "Markdown" });
+    return;
+  }
+  if (s.step === "addr") {
+    if (msg.text !== "/skip") s.address = msg.text.trim();
+    s.step = "svc";
+    await bot.sendMessage(id, tr(id, "chooseService"), { reply_markup: svcKbd(id) });
   }
 });
 
-console.log("🤖 BCS Quality Bot started (RU/EN/UZ)...");
+// ─── CALLBACKS ────────────────────────────────────────────────────────────────
+
+bot.on("callback_query", async (q) => {
+  const id    = q.message.chat.id;
+  const msgId = q.message.message_id;
+  const data  = q.data;
+  const s     = sess(id);
+  await bot.answerCallbackQuery(q.id);
+
+  // Language
+  if (data.startsWith("L_")) {
+    const l = data.slice(2);
+    cleaners[id] = { lang: l, name: null };
+    s.step = "name";
+    await bot.editMessageText(T[l].askName, { chat_id: id, message_id: msgId });
+    return;
+  }
+
+  // Service
+  if (data.startsWith("S_")) {
+    const key = data.slice(2);
+    Object.assign(s, { service: key, checked: {}, photoBefore: [], photoAfter: [], criticalDone: {}, step: "photo_before", zoneIdx: 0 });
+    await bot.editMessageText(tr(id, "photoBefore", SERVICES[lang(id)][key]), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "startNoPhoto"), callback_data: "START_CLEAN" }]] } });
+    return;
+  }
+
+  // Start cleaning (after photo before or skipped)
+  if (data === "START_CLEAN") {
+    s.step = "zones";
+    await showZones(id, msgId, s);
+    return;
+  }
+
+  // Select zone by index
+  if (data.startsWith("Z_")) {
+    s.zoneIdx = parseInt(data.slice(2));
+    s.step = "checklist";
+    await showZone(id, msgId, s);
+    return;
+  }
+
+  // Toggle checklist item
+  if (data.startsWith("C_")) {
+    const i    = parseInt(data.slice(2));
+    const zone = ZONES[s.zoneIdx];
+    if (!s.checked[zone]) s.checked[zone] = Array(((CHECKLISTS[s.service]||{})[zone]||[]).length).fill(false);
+    s.checked[zone][i] = !s.checked[zone][i];
+    await showZone(id, msgId, s);
+    return;
+  }
+
+  // Back to zones list
+  if (data === "BACK_ZONES") {
+    s.step = "zones";
+    await showZones(id, msgId, s);
+    return;
+  }
+
+  // Go to photo after
+  if (data === "PHOTO_AFTER") {
+    s.step = "photo_after";
+    s.photoAfter = [];
+    await bot.editMessageText(tr(id, "photoAfter"), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "gotoCrit"), callback_data: "CRIT" }]] } });
+    return;
+  }
+
+  // Go to critical check
+  if (data === "CRIT") {
+    s.step = "critical";
+    const done  = Object.values(s.criticalDone).filter(Boolean).length;
+    const total = CRITICAL_FINAL[lang(id)].length;
+    await bot.editMessageText(tr(id, "critTitle", s.photoAfter.length, bar(done, total)), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: critKbd(id, s) });
+    return;
+  }
+
+  // Toggle critical item
+  if (data.startsWith("K_")) {
+    const i = parseInt(data.slice(2));
+    s.criticalDone[i] = !s.criticalDone[i];
+    const done  = Object.values(s.criticalDone).filter(Boolean).length;
+    const total = CRITICAL_FINAL[lang(id)].length;
+    await bot.editMessageText(tr(id, "critTitle", s.photoAfter.length, bar(done, total)), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: critKbd(id, s) });
+    return;
+  }
+
+  // Finish order
+  if (data === "FINISH") {
+    const dur = s.startedAt ? Math.round((Date.now() - s.startedAt) / 60000) : "—";
+    const nm  = name(id) || q.from.first_name;
+    await bot.editMessageText(tr(id, "finished", nm, SERVICES[lang(id)][s.service], dur, s.address||"—", s.photoBefore.length, s.photoAfter.length), { chat_id: id, message_id: msgId, parse_mode: "Markdown", reply_markup: { inline_keyboard: [[{ text: tr(id, "newOrder"), callback_data: "NEW" }]] } });
+    await sendReport(id, s, q.from);
+    resetSess(id);
+    return;
+  }
+
+  // New order
+  if (data === "NEW") {
+    const s2 = resetSess(id);
+    s2.step = "addr";
+    s2.startedAt = Date.now();
+    await bot.sendMessage(id, tr(id, "newOrderMsg"));
+  }
+});
+
+console.log("🤖 BCS Bot v3 started (RU/EN/UZ)...");
