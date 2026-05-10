@@ -1,0 +1,12 @@
+{
+  "name": "bcs-quality-bot",
+  "version": "1.0.0",
+  "description": "BCS Quality Control Telegram Bot",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
