@@ -42,8 +42,8 @@ const T = {
 
     photoBefore:
       `📸 *Шаг 3 — Фото ДО уборки*\n\n` +
-      `Сфотографируй каждую зону до начала уборки.\n` +
-      `Мин. 3 фото: кухня, ванная, общий вид.\n\n` +
+      `‼️ Сфотографируй *каждую зону* которую будешь убирать — до начала уборки.\n\n` +
+      `Обязательно: кухня, ванная, спальня, гостиная, коридор, окна — все зоны заказа.\n\n` +
       `⬆️ Отправь фото в чат:`,
     photoBeforeGot: (n) => `📸 Фото ДО: ${n} шт. Отправь ещё или продолжи:`,
     beforeDone: (n) => `✅ Готово (${n} фото) → Шаг 4: Фото ПОСЛЕ`,
@@ -120,7 +120,8 @@ const T = {
 
     photoBefore:
       `📸 *Step 3 — Photos BEFORE Cleaning*\n\n` +
-      `Photo each zone before starting.\nMin 3: kitchen, bathroom, overview.\n\n` +
+      `‼️ Photo *every zone* you will be cleaning — before you start.\n\n` +
+      `Required: kitchen, bathroom, bedroom, living room, hallway, windows — all zones in this order.\n\n` +
       `⬆️ Send photos to chat:`,
     photoBeforeGot: (n) => `📸 Before: ${n} photo(s). Send more or continue:`,
     beforeDone: (n) => `✅ Done (${n} photos) → Step 4: After Photos`,
@@ -197,7 +198,8 @@ const T = {
 
     photoBefore:
       `📸 *3-qadam — Tozalashdan OLDIN suratlari*\n\n` +
-      `Har zonani tozalashdan oldin suratlang.\nKamida 3: oshxona, hammom, umumiy.\n\n` +
+      `‼️ Tozalaydigan *har bir zonani* suratlang — tozalashdan oldin.\n\n` +
+      `Majburiy: oshxona, hammom, yotoqxona, mehmonxona, koridor, derazalar — buyurtmadagi barcha zonalar.\n\n` +
       `⬆️ Suratlarni chatga yuboring:`,
     photoBeforeGot: (n) => `📸 Oldin: ${n} surat. Yana yuboring yoki davom eting:`,
     beforeDone: (n) => `✅ Tayyor (${n} surat) → 4-qadam: KEYIN suratlari`,
@@ -250,7 +252,7 @@ function sess(id) {
   if (!sessions[id]) sessions[id] = {
     step: "idle",
     photoExterior: [], photoEquip: [], photoBefore: [], photoAfter: [],
-    startedAt: null, client: null,
+    startedAt: null, client: null, photoMsgId: null,
   };
   return sessions[id];
 }
@@ -334,18 +336,30 @@ bot.on("message", async (msg) => {
   if (msg.photo) {
     const fid = msg.photo[msg.photo.length - 1].file_id;
     const map = {
-      photo_exterior: { arr: "photoExterior", gotKey: "photoExteriorGot", btnLabel: (n) => tr(id, "exteriorDone"),          btnCb: "EXTERIOR_DONE" },
-      photo_equip:    { arr: "photoEquip",    gotKey: "photoEquipGot",    btnLabel: (n) => tr(id, "equipDone"),             btnCb: "EQUIP_DONE"    },
-      photo_before:   { arr: "photoBefore",   gotKey: "photoBeforeGot",   btnLabel: (n) => tr(id, "beforeDone", n),         btnCb: "BEFORE_DONE"   },
-      photo_after:    { arr: "photoAfter",    gotKey: "photoAfterGot",    btnLabel: (n) => tr(id, "afterDone",  n),         btnCb: "AFTER_DONE"    },
+      photo_exterior: { arr: "photoExterior", gotKey: "photoExteriorGot", btnLabel: (n) => tr(id, "exteriorDone"), btnCb: "EXTERIOR_DONE" },
+      photo_equip:    { arr: "photoEquip",    gotKey: "photoEquipGot",    btnLabel: (n) => tr(id, "equipDone"),    btnCb: "EQUIP_DONE"   },
+      photo_before:   { arr: "photoBefore",   gotKey: "photoBeforeGot",   btnLabel: (n) => tr(id, "beforeDone", n), btnCb: "BEFORE_DONE" },
+      photo_after:    { arr: "photoAfter",    gotKey: "photoAfterGot",    btnLabel: (n) => tr(id, "afterDone",  n), btnCb: "AFTER_DONE"  },
     };
     const cfg = map[s.step];
     if (cfg) {
       s[cfg.arr].push(fid);
       const n = s[cfg.arr].length;
-      await bot.sendMessage(id, tr(id, cfg.gotKey, n), {
-        reply_markup: withLangBtn([[{ text: cfg.btnLabel(n), callback_data: cfg.btnCb }]], id),
-      });
+      const text   = tr(id, cfg.gotKey, n);
+      const markup = withLangBtn([[{ text: cfg.btnLabel(n), callback_data: cfg.btnCb }]], id);
+      if (s.photoMsgId) {
+        // Edit existing counter message instead of sending a new one
+        try {
+          await bot.editMessageText(text, { chat_id: id, message_id: s.photoMsgId, reply_markup: markup });
+        } catch (e) {
+          // If edit fails (e.g. message too old), send new
+          const sent = await bot.sendMessage(id, text, { reply_markup: markup });
+          s.photoMsgId = sent.message_id;
+        }
+      } else {
+        const sent = await bot.sendMessage(id, text, { reply_markup: markup });
+        s.photoMsgId = sent.message_id;
+      }
     }
     return;
   }
@@ -405,7 +419,7 @@ bot.on("callback_query", async (q) => {
 
   // ── Contract OK → step 1 ──
   if (data === "CONTRACT_OK") {
-    s.step = "photo_exterior";
+    s.step = "photo_exterior"; s.photoMsgId = null;
     Object.assign(s, { photoExterior: [], photoEquip: [], photoBefore: [], photoAfter: [] });
     await bot.editMessageText(tr(id, "photoExterior"), {
       chat_id: id, message_id: msgId, parse_mode: "Markdown",
@@ -417,7 +431,7 @@ bot.on("callback_query", async (q) => {
   // ── Step 1 done → step 2 ──
   if (data === "EXTERIOR_DONE") {
     if (!s.photoExterior.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
-    s.step = "photo_equip";
+    s.step = "photo_equip"; s.photoMsgId = null;
     await bot.editMessageText(tr(id, "photoEquip"), {
       chat_id: id, message_id: msgId, parse_mode: "Markdown",
       reply_markup: withLangBtn([], id),
@@ -428,7 +442,7 @@ bot.on("callback_query", async (q) => {
   // ── Step 2 done → step 3 ──
   if (data === "EQUIP_DONE") {
     if (!s.photoEquip.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
-    s.step = "photo_before";
+    s.step = "photo_before"; s.photoMsgId = null;
     await bot.editMessageText(tr(id, "photoBefore"), {
       chat_id: id, message_id: msgId, parse_mode: "Markdown",
       reply_markup: withLangBtn([], id),
@@ -439,7 +453,7 @@ bot.on("callback_query", async (q) => {
   // ── Step 3 done → step 4 ──
   if (data === "BEFORE_DONE") {
     if (!s.photoBefore.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
-    s.step = "photo_after";
+    s.step = "photo_after"; s.photoMsgId = null;
     await bot.editMessageText(tr(id, "photoAfter"), {
       chat_id: id, message_id: msgId, parse_mode: "Markdown",
       reply_markup: withLangBtn([], id),
