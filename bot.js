@@ -344,22 +344,16 @@ bot.on("message", async (msg) => {
     const cfg = map[s.step];
     if (cfg) {
       s[cfg.arr].push(fid);
-      const n = s[cfg.arr].length;
+      const n      = s[cfg.arr].length;
       const text   = tr(id, cfg.gotKey, n);
       const markup = withLangBtn([[{ text: cfg.btnLabel(n), callback_data: cfg.btnCb }]], id);
+
+      // Always delete old counter message and send a fresh one below the latest photo
       if (s.photoMsgId) {
-        // Edit existing counter message instead of sending a new one
-        try {
-          await bot.editMessageText(text, { chat_id: id, message_id: s.photoMsgId, reply_markup: markup });
-        } catch (e) {
-          // If edit fails (e.g. message too old), send new
-          const sent = await bot.sendMessage(id, text, { reply_markup: markup });
-          s.photoMsgId = sent.message_id;
-        }
-      } else {
-        const sent = await bot.sendMessage(id, text, { reply_markup: markup });
-        s.photoMsgId = sent.message_id;
+        try { await bot.deleteMessage(id, s.photoMsgId); } catch (_) {}
       }
+      const sent = await bot.sendMessage(id, text, { reply_markup: markup });
+      s.photoMsgId = sent.message_id;
     }
     return;
   }
