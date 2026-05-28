@@ -8,9 +8,10 @@ const bot      = new TelegramBot(TOKEN, { polling: true });
 
 const T = {
   ru: {
-    askLang:   "🌐 Выбери язык / Choose language / Tilni tanlang:",
-    askName:   "👤 Введи своё имя и фамилию:",
-    askAddress:"👤 Укажи имя клиента:",
+    askLang:    "🌐 Выбери язык / Choose language / Tilni tanlang:",
+    askName:    "👤 Введи своё имя и фамилию:",
+    askClient:  "👤 Укажи имя клиента:",
+    changeLang: "🌐 Сменить язык",
 
     contractMsg:
       `📋 *ВАЖНО — Стандарт компании BCS*\n\n` +
@@ -23,9 +24,6 @@ const T = {
       `❗️ Без сдачи заказа клиенту — оплата не назначается.\n\nНажми чтобы начать:`,
     contractBtn: "✅ Понял, начинаю",
 
-    chooseService: "🧹 Выбери тип уборки:",
-
-    // Step 1 — uniform / exterior
     photoExterior:
       `📸 *Шаг 1 — Фото внешнего вида*\n\n` +
       `Сфотографируй себя в полной форме:\n` +
@@ -34,7 +32,6 @@ const T = {
     photoExteriorGot: (n) => `📸 Внешний вид: ${n} фото. Отправь ещё или продолжи:`,
     exteriorDone: "✅ Готово → Шаг 2: Оборудование",
 
-    // Step 2 — equipment
     photoEquip:
       `🧴 *Шаг 2 — Фото оборудования*\n\n` +
       `Сфотографируй все средства и оборудование:\n` +
@@ -43,7 +40,6 @@ const T = {
     photoEquipGot: (n) => `🧴 Оборудование: ${n} фото. Отправь ещё или продолжи:`,
     equipDone: "✅ Готово → Шаг 3: Фото ДО",
 
-    // Step 3 — before
     photoBefore:
       `📸 *Шаг 3 — Фото ДО уборки*\n\n` +
       `Сфотографируй каждую зону до начала уборки.\n` +
@@ -52,7 +48,6 @@ const T = {
     photoBeforeGot: (n) => `📸 Фото ДО: ${n} шт. Отправь ещё или продолжи:`,
     beforeDone: (n) => `✅ Готово (${n} фото) → Шаг 4: Фото ПОСЛЕ`,
 
-    // Step 4 — after
     photoAfter:
       `📸 *Шаг 4 — Фото ПОСЛЕ уборки*\n\n` +
       `Фотографируй с тех же точек что и «до».\n\n` +
@@ -60,7 +55,6 @@ const T = {
     photoAfterGot: (n) => `📸 Фото ПОСЛЕ: ${n} шт. Отправь ещё или продолжи:`,
     afterDone: (n) => `✅ Готово (${n} фото) → Шаг 5: Сдача клиенту`,
 
-    // Step 5 — handover
     handover:
       `🤝 *Шаг 5 — Сдача работы клиенту*\n\n` +
       `Согласно контракту 1099, ты *обязан* сдать работу клиенту:\n\n` +
@@ -70,7 +64,6 @@ const T = {
       `❗️ Только после подтверждения клиента работа считается завершённой.\n\nКлиент принял работу?`,
     handoverBtn: "✅ Клиент принял работу",
 
-    // Step 6 — wait payment
     waitPayment:
       `⏳ *Ожидай оплату*\n\n` +
       `Отчёт отправлен менеджеру ✅\n\n` +
@@ -84,9 +77,9 @@ const T = {
     newOrder:    "🔄 Новый заказ",
     newOrderMsg: "👤 Имя клиента для нового заказа:",
 
-    reportTitle: (name, user, addr, svc, dur) =>
+    reportTitle: (name, user, client, dur) =>
       `📋 *ОТЧЁТ О ЗАКАЗЕ*\n━━━━━━━━━━━━━━━━━━━━\n` +
-      `👤 ${name} (@${user})\n🧑‍💼 ${addr}\n🧹 ${svc}\n⏱ ${dur} мин\n` +
+      `👷 ${name} (@${user})\n🧑‍💼 Клиент: ${client}\n⏱ ${dur} мин\n` +
       `📅 ${new Date().toLocaleString("ru-RU")}\n━━━━━━━━━━━━━━━━━━━━\n`,
     payConfirmBtn: (name) => `💳 Подтвердить оплату для ${name}`,
     needPhoto: "⚠️ Сначала отправь хотя бы одно фото!",
@@ -95,7 +88,9 @@ const T = {
   en: {
     askLang:    "🌐 Выбери язык / Choose language / Tilni tanlang:",
     askName:    "👤 Enter your first and last name:",
-    askAddress: "👤 Enter client name:",
+    askClient:  "👤 Enter client name:",
+    changeLang: "🌐 Change language",
+
     contractMsg:
       `📋 *IMPORTANT — BCS Company Standard*\n\n` +
       `Per 1099 contract, an order is *complete and payable* only when all steps are done:\n\n` +
@@ -106,7 +101,6 @@ const T = {
       `5️⃣ Client acceptance & sign-off\n\n` +
       `❗️ Without client sign-off — payment is NOT assigned.\n\nTap to begin:`,
     contractBtn: "✅ Understood, let's start",
-    chooseService: "🧹 Choose cleaning type:",
 
     photoExterior:
       `📸 *Step 1 — Uniform & Appearance*\n\n` +
@@ -159,9 +153,10 @@ const T = {
 
     newOrder:    "🔄 New order",
     newOrderMsg: "👤 Client name for new order:",
-    reportTitle: (name, user, addr, svc, dur) =>
+
+    reportTitle: (name, user, client, dur) =>
       `📋 *ORDER REPORT*\n━━━━━━━━━━━━━━━━━━━━\n` +
-      `👤 ${name} (@${user})\n🧑‍💼 ${addr}\n🧹 ${svc}\n⏱ ${dur} min\n` +
+      `👷 ${name} (@${user})\n🧑‍💼 Client: ${client}\n⏱ ${dur} min\n` +
       `📅 ${new Date().toLocaleString("en-US")}\n━━━━━━━━━━━━━━━━━━━━\n`,
     payConfirmBtn: (name) => `💳 Confirm payment for ${name}`,
     needPhoto: "⚠️ Please send at least one photo first!",
@@ -170,7 +165,9 @@ const T = {
   uz: {
     askLang:    "🌐 Выбери язык / Choose language / Tilni tanlang:",
     askName:    "👤 Ism va familiyangizni kiriting:",
-    askAddress: "👤 Mijoz ismini kiriting:",
+    askClient:  "👤 Mijoz ismini kiriting:",
+    changeLang: "🌐 Tilni o'zgartirish",
+
     contractMsg:
       `📋 *MUHIM — BCS Kompaniya Standarti*\n\n` +
       `1099 shartnomaga ko'ra, buyurtma faqat barcha bosqichlar bajarilganda *tugallangan va to'lanadi*:\n\n` +
@@ -181,7 +178,6 @@ const T = {
       `5️⃣ Mijozga ishni topshirish\n\n` +
       `❗️ Mijoz qabul qilmasdan — to'lov tayinlanmaydi.\n\nBoshlash uchun bosing:`,
     contractBtn: "✅ Tushundim, boshlayman",
-    chooseService: "🧹 Tozalash turini tanlang:",
 
     photoExterior:
       `📸 *1-qadam — Forma va tashqi ko'rinish*\n\n` +
@@ -234,38 +230,33 @@ const T = {
 
     newOrder:    "🔄 Yangi buyurtma",
     newOrderMsg: "👤 Yangi buyurtma uchun mijoz ismi:",
-    reportTitle: (name, user, addr, svc, dur) =>
+
+    reportTitle: (name, user, client, dur) =>
       `📋 *BUYURTMA HISOBOTI*\n━━━━━━━━━━━━━━━━━━━━\n` +
-      `👤 ${name} (@${user})\n🧑‍💼 ${addr}\n🧹 ${svc}\n⏱ ${dur} daqiqa\n` +
+      `👷 ${name} (@${user})\n🧑‍💼 Mijoz: ${client}\n⏱ ${dur} daqiqa\n` +
       `📅 ${new Date().toLocaleString("ru-RU")}\n━━━━━━━━━━━━━━━━━━━━\n`,
     payConfirmBtn: (name) => `💳 ${name} uchun to'lovni tasdiqlash`,
     needPhoto: "⚠️ Avval kamida bitta surat yuboring!",
   },
 };
 
-const SERVICES = {
-  ru: { deep: "🧹 Deep Cleaning", regular: "🏠 Regular Standard", moveinout: "📦 Move In/Out", postconstruction: "🔨 Post Construction" },
-  en: { deep: "🧹 Deep Cleaning", regular: "🏠 Regular Standard", moveinout: "📦 Move In/Out", postconstruction: "🔨 Post Construction" },
-  uz: { deep: "🧹 Chuqur tozalash", regular: "🏠 Standart", moveinout: "📦 Kirish/Chiqish", postconstruction: "🔨 Qurilishdan keyin" },
-};
-
 // ─── SESSION & HELPERS ────────────────────────────────────────────────────────
 
-const sessions      = {};
-const cleaners      = {};
+const sessions       = {};
+const cleaners       = {};
 const pendingPayment = {};
 
 function sess(id) {
   if (!sessions[id]) sessions[id] = {
-    step: "idle", service: null,
+    step: "idle",
     photoExterior: [], photoEquip: [], photoBefore: [], photoAfter: [],
     startedAt: null, client: null,
   };
   return sessions[id];
 }
 function resetSess(id) { sessions[id] = null; return sess(id); }
-function lang(id) { return (cleaners[id] && cleaners[id].lang) || "ru"; }
-function name(id) { return (cleaners[id] && cleaners[id].name) || ""; }
+function lang(id)  { return (cleaners[id] && cleaners[id].lang) || "ru"; }
+function uname(id) { return (cleaners[id] && cleaners[id].name) || ""; }
 function tr(id, key, ...a) {
   const fn = T[lang(id)][key];
   return typeof fn === "function" ? fn(...a) : fn;
@@ -279,21 +270,20 @@ const langKbd = () => ({ inline_keyboard: [
   [{ text: "🇺🇿 O'zbek",  callback_data: "L_uz" }],
 ]});
 
-function svcKbd(id) {
-  return { inline_keyboard: Object.entries(SERVICES[lang(id)]).map(([k, v]) => [{ text: v, callback_data: `S_${k}` }]) };
+// Change language button — appended to any keyboard
+function withLangBtn(rows, id) {
+  return { inline_keyboard: [...rows, [{ text: tr(id, "changeLang"), callback_data: "CHANGE_LANG" }]] };
 }
 
 // ─── REPORT ───────────────────────────────────────────────────────────────────
 
 async function sendReport(id, s, user) {
   if (!ADMIN_ID) return;
-  const l   = lang(id);
-  const svc = SERVICES[l][s.service];
   const dur = s.startedAt ? Math.round((Date.now() - s.startedAt) / 60000) : "—";
-  const nm  = name(id) || user.first_name;
+  const nm  = uname(id) || user.first_name;
 
   const txt =
-    tr(id, "reportTitle", nm, user.username || "—", s.client || "—", svc, dur) +
+    tr(id, "reportTitle", nm, user.username || "—", s.client || "—", dur) +
     `📸 Внешний вид/форма: ${s.photoExterior.length} шт\n` +
     `🧴 Оборудование: ${s.photoEquip.length} шт\n` +
     `📸 ДО: ${s.photoBefore.length} шт\n` +
@@ -306,13 +296,12 @@ async function sendReport(id, s, user) {
   });
   pendingPayment[`PAY_${id}`] = id;
 
-  const groups = [
+  for (const g of [
     { label: "📸 *Форма/внешний вид:*", photos: s.photoExterior },
     { label: "🧴 *Оборудование:*",      photos: s.photoEquip    },
     { label: "📸 *Фото ДО:*",           photos: s.photoBefore   },
     { label: "📸 *Фото ПОСЛЕ:*",        photos: s.photoAfter    },
-  ];
-  for (const g of groups) {
+  ]) {
     if (!g.photos.length) continue;
     await bot.sendMessage(ADMIN_ID, g.label, { parse_mode: "Markdown" });
     for (const f of g.photos) await bot.sendPhoto(ADMIN_ID, f);
@@ -324,13 +313,15 @@ async function sendReport(id, s, user) {
 bot.onText(/\/start/, async (msg) => {
   const id = msg.chat.id;
   resetSess(id);
-  const s = sess(id);
-  if (cleaners[id] && cleaners[id].name) {
-    s.step = "addr";
-    await bot.sendMessage(id, tr(id, "askAddress"));
-  } else {
-    await bot.sendMessage(id, T.ru.askLang, { reply_markup: langKbd() });
-  }
+  // Always show language picker on /start
+  await bot.sendMessage(id, T.ru.askLang, { reply_markup: langKbd() });
+});
+
+// ─── /lang — change language any time ────────────────────────────────────────
+
+bot.onText(/\/lang/, async (msg) => {
+  const id = msg.chat.id;
+  await bot.sendMessage(id, T.ru.askLang, { reply_markup: langKbd() });
 });
 
 // ─── MESSAGES ─────────────────────────────────────────────────────────────────
@@ -339,22 +330,21 @@ bot.on("message", async (msg) => {
   const id = msg.chat.id;
   const s  = sess(id);
 
+  // Photos
   if (msg.photo) {
     const fid = msg.photo[msg.photo.length - 1].file_id;
-    const steps = {
-      photo_exterior: { arr: "photoExterior", gotKey: "photoExteriorGot", btnText: "exteriorDone", btnCb: "EXTERIOR_DONE" },
-      photo_equip:    { arr: "photoEquip",    gotKey: "photoEquipGot",    btnText: "equipDone",    btnCb: "EQUIP_DONE"    },
-      photo_before:   { arr: "photoBefore",   gotKey: "photoBeforeGot",   btnText: null,           btnCb: "BEFORE_DONE"  },
-      photo_after:    { arr: "photoAfter",    gotKey: "photoAfterGot",    btnText: null,           btnCb: "AFTER_DONE"   },
+    const map = {
+      photo_exterior: { arr: "photoExterior", gotKey: "photoExteriorGot", btnLabel: (n) => tr(id, "exteriorDone"),          btnCb: "EXTERIOR_DONE" },
+      photo_equip:    { arr: "photoEquip",    gotKey: "photoEquipGot",    btnLabel: (n) => tr(id, "equipDone"),             btnCb: "EQUIP_DONE"    },
+      photo_before:   { arr: "photoBefore",   gotKey: "photoBeforeGot",   btnLabel: (n) => tr(id, "beforeDone", n),         btnCb: "BEFORE_DONE"   },
+      photo_after:    { arr: "photoAfter",    gotKey: "photoAfterGot",    btnLabel: (n) => tr(id, "afterDone",  n),         btnCb: "AFTER_DONE"    },
     };
-    const cfg = steps[s.step];
+    const cfg = map[s.step];
     if (cfg) {
       s[cfg.arr].push(fid);
-      const n    = s[cfg.arr].length;
-      const text = tr(id, cfg.gotKey, n);
-      const btnLabel = cfg.btnText ? tr(id, cfg.btnText) : tr(id, cfg.btnCb === "BEFORE_DONE" ? "beforeDone" : "afterDone", n);
-      await bot.sendMessage(id, text, {
-        reply_markup: { inline_keyboard: [[{ text: btnLabel, callback_data: cfg.btnCb }]] },
+      const n = s[cfg.arr].length;
+      await bot.sendMessage(id, tr(id, cfg.gotKey, n), {
+        reply_markup: withLangBtn([[{ text: cfg.btnLabel(n), callback_data: cfg.btnCb }]], id),
       });
     }
     return;
@@ -364,17 +354,20 @@ bot.on("message", async (msg) => {
 
   if (s.step === "name") {
     cleaners[id].name = msg.text.trim();
-    s.step = "addr";
-    await bot.sendMessage(id, tr(id, "askAddress"));
+    s.step = "client";
+    await bot.sendMessage(id, tr(id, "askClient"), {
+      reply_markup: withLangBtn([], id),
+    });
     return;
   }
-  if (s.step === "addr") {
-    s.client = msg.text.trim();
-    s.step      = "contract";
+
+  if (s.step === "client") {
+    s.client    = msg.text.trim();
     s.startedAt = Date.now();
+    s.step      = "contract";
     await bot.sendMessage(id, tr(id, "contractMsg"), {
       parse_mode: "Markdown",
-      reply_markup: { inline_keyboard: [[{ text: tr(id, "contractBtn"), callback_data: "CONTRACT_OK" }]] },
+      reply_markup: withLangBtn([[{ text: tr(id, "contractBtn"), callback_data: "CONTRACT_OK" }]], id),
     });
   }
 });
@@ -388,64 +381,84 @@ bot.on("callback_query", async (q) => {
   const s     = sess(id);
   await bot.answerCallbackQuery(q.id);
 
-  // Language
+  // ── Change language (from any screen) ──
+  if (data === "CHANGE_LANG") {
+    await bot.sendMessage(id, T.ru.askLang, { reply_markup: langKbd() });
+    return;
+  }
+
+  // ── Language selected ──
   if (data.startsWith("L_")) {
-    cleaners[id] = { lang: data.slice(2), name: null };
-    sess(id).step = "name";
-    await bot.editMessageText(tr(id, "askName"), { chat_id: id, message_id: msgId });
+    const l = data.slice(2);
+    const hadName = cleaners[id] && cleaners[id].name;
+    cleaners[id] = { lang: l, name: hadName || null };
+    if (hadName) {
+      // Already knows name — ask client
+      sess(id).step = "client";
+      await bot.editMessageText(T[l].askClient, { chat_id: id, message_id: msgId });
+    } else {
+      sess(id).step = "name";
+      await bot.editMessageText(T[l].askName, { chat_id: id, message_id: msgId });
+    }
     return;
   }
 
-  // Contract OK → choose service
+  // ── Contract OK → step 1 ──
   if (data === "CONTRACT_OK") {
-    s.step = "svc";
-    await bot.editMessageText(tr(id, "chooseService"), { chat_id: id, message_id: msgId, reply_markup: svcKbd(id) });
+    s.step = "photo_exterior";
+    Object.assign(s, { photoExterior: [], photoEquip: [], photoBefore: [], photoAfter: [] });
+    await bot.editMessageText(tr(id, "photoExterior"), {
+      chat_id: id, message_id: msgId, parse_mode: "Markdown",
+      reply_markup: withLangBtn([], id),
+    });
     return;
   }
 
-  // Service chosen → step 1
-  if (data.startsWith("S_")) {
-    Object.assign(s, { service: data.slice(2), photoExterior: [], photoEquip: [], photoBefore: [], photoAfter: [], step: "photo_exterior" });
-    await bot.editMessageText(tr(id, "photoExterior"), { chat_id: id, message_id: msgId, parse_mode: "Markdown" });
-    return;
-  }
-
-  // Step 1 done → step 2
+  // ── Step 1 done → step 2 ──
   if (data === "EXTERIOR_DONE") {
     if (!s.photoExterior.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
     s.step = "photo_equip";
-    await bot.editMessageText(tr(id, "photoEquip"), { chat_id: id, message_id: msgId, parse_mode: "Markdown" });
+    await bot.editMessageText(tr(id, "photoEquip"), {
+      chat_id: id, message_id: msgId, parse_mode: "Markdown",
+      reply_markup: withLangBtn([], id),
+    });
     return;
   }
 
-  // Step 2 done → step 3
+  // ── Step 2 done → step 3 ──
   if (data === "EQUIP_DONE") {
     if (!s.photoEquip.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
     s.step = "photo_before";
-    await bot.editMessageText(tr(id, "photoBefore"), { chat_id: id, message_id: msgId, parse_mode: "Markdown" });
+    await bot.editMessageText(tr(id, "photoBefore"), {
+      chat_id: id, message_id: msgId, parse_mode: "Markdown",
+      reply_markup: withLangBtn([], id),
+    });
     return;
   }
 
-  // Step 3 done → step 4
+  // ── Step 3 done → step 4 ──
   if (data === "BEFORE_DONE") {
     if (!s.photoBefore.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
     s.step = "photo_after";
-    await bot.editMessageText(tr(id, "photoAfter"), { chat_id: id, message_id: msgId, parse_mode: "Markdown" });
+    await bot.editMessageText(tr(id, "photoAfter"), {
+      chat_id: id, message_id: msgId, parse_mode: "Markdown",
+      reply_markup: withLangBtn([], id),
+    });
     return;
   }
 
-  // Step 4 done → step 5 handover
+  // ── Step 4 done → step 5 handover ──
   if (data === "AFTER_DONE") {
     if (!s.photoAfter.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
     s.step = "handover";
     await bot.editMessageText(tr(id, "handover"), {
       chat_id: id, message_id: msgId, parse_mode: "Markdown",
-      reply_markup: { inline_keyboard: [[{ text: tr(id, "handoverBtn"), callback_data: "HANDOVER_DONE" }]] },
+      reply_markup: withLangBtn([[{ text: tr(id, "handoverBtn"), callback_data: "HANDOVER_DONE" }]], id),
     });
     return;
   }
 
-  // Handover done → wait payment + send report
+  // ── Handover done → send report + wait payment ──
   if (data === "HANDOVER_DONE") {
     s.step = "waiting_payment";
     await bot.editMessageText(tr(id, "waitPayment"), { chat_id: id, message_id: msgId, parse_mode: "Markdown" });
@@ -453,11 +466,11 @@ bot.on("callback_query", async (q) => {
     return;
   }
 
-  // Manager confirms payment
+  // ── Manager confirms payment ──
   if (data.startsWith("PAY_")) {
     const cleanerId = pendingPayment[data];
     if (!cleanerId) { await bot.answerCallbackQuery(q.id, { text: "Заказ уже закрыт.", show_alert: true }); return; }
-    const nm = name(cleanerId) || "Клинер";
+    const nm = uname(cleanerId) || "Клинер";
     await bot.sendMessage(cleanerId, tr(cleanerId, "paymentConfirmed", nm), {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: [[{ text: tr(cleanerId, "newOrder"), callback_data: "NEW" }]] },
@@ -472,12 +485,14 @@ bot.on("callback_query", async (q) => {
     return;
   }
 
-  // New order
+  // ── New order ──
   if (data === "NEW") {
     const s2 = resetSess(id);
-    s2.step  = "addr";
-    await bot.sendMessage(id, tr(id, "newOrderMsg"));
+    s2.step  = "client";
+    await bot.sendMessage(id, tr(id, "newOrderMsg"), {
+      reply_markup: withLangBtn([], id),
+    });
   }
 });
 
-console.log("🤖 BCS Bot v5 started (RU/EN/UZ)...");
+console.log("🤖 BCS Bot v6 started (RU/EN/UZ)...");
