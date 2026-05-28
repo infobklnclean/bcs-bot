@@ -10,7 +10,7 @@ const T = {
   ru: {
     askLang:   "🌐 Выбери язык / Choose language / Tilni tanlang:",
     askName:   "👤 Введи своё имя и фамилию:",
-    askAddress:"📍 Укажи адрес объекта:",
+    askAddress:"👤 Укажи имя клиента:",
 
     contractMsg:
       `📋 *ВАЖНО — Стандарт компании BCS*\n\n` +
@@ -82,11 +82,11 @@ const T = {
       `✅ *Оплата подтверждена!*\n\n👤 ${name} — оплата за заказ получена.\n\nМожешь покинуть объект. Спасибо! 💪`,
 
     newOrder:    "🔄 Новый заказ",
-    newOrderMsg: "📍 Адрес нового объекта:",
+    newOrderMsg: "👤 Имя клиента для нового заказа:",
 
     reportTitle: (name, user, addr, svc, dur) =>
       `📋 *ОТЧЁТ О ЗАКАЗЕ*\n━━━━━━━━━━━━━━━━━━━━\n` +
-      `👤 ${name} (@${user})\n📍 ${addr}\n🧹 ${svc}\n⏱ ${dur} мин\n` +
+      `👤 ${name} (@${user})\n🧑‍💼 ${addr}\n🧹 ${svc}\n⏱ ${dur} мин\n` +
       `📅 ${new Date().toLocaleString("ru-RU")}\n━━━━━━━━━━━━━━━━━━━━\n`,
     payConfirmBtn: (name) => `💳 Подтвердить оплату для ${name}`,
     needPhoto: "⚠️ Сначала отправь хотя бы одно фото!",
@@ -95,7 +95,7 @@ const T = {
   en: {
     askLang:    "🌐 Выбери язык / Choose language / Tilni tanlang:",
     askName:    "👤 Enter your first and last name:",
-    askAddress: "📍 Enter the property address:",
+    askAddress: "👤 Enter client name:",
     contractMsg:
       `📋 *IMPORTANT — BCS Company Standard*\n\n` +
       `Per 1099 contract, an order is *complete and payable* only when all steps are done:\n\n` +
@@ -158,10 +158,10 @@ const T = {
       `✅ *Payment Confirmed!*\n\n👤 ${name} — payment received.\n\nYou may leave the property. Great work! 💪`,
 
     newOrder:    "🔄 New order",
-    newOrderMsg: "📍 Address of new property:",
+    newOrderMsg: "👤 Client name for new order:",
     reportTitle: (name, user, addr, svc, dur) =>
       `📋 *ORDER REPORT*\n━━━━━━━━━━━━━━━━━━━━\n` +
-      `👤 ${name} (@${user})\n📍 ${addr}\n🧹 ${svc}\n⏱ ${dur} min\n` +
+      `👤 ${name} (@${user})\n🧑‍💼 ${addr}\n🧹 ${svc}\n⏱ ${dur} min\n` +
       `📅 ${new Date().toLocaleString("en-US")}\n━━━━━━━━━━━━━━━━━━━━\n`,
     payConfirmBtn: (name) => `💳 Confirm payment for ${name}`,
     needPhoto: "⚠️ Please send at least one photo first!",
@@ -170,7 +170,7 @@ const T = {
   uz: {
     askLang:    "🌐 Выбери язык / Choose language / Tilni tanlang:",
     askName:    "👤 Ism va familiyangizni kiriting:",
-    askAddress: "📍 Ob'ekt manzilini kiriting:",
+    askAddress: "👤 Mijoz ismini kiriting:",
     contractMsg:
       `📋 *MUHIM — BCS Kompaniya Standarti*\n\n` +
       `1099 shartnomaga ko'ra, buyurtma faqat barcha bosqichlar bajarilganda *tugallangan va to'lanadi*:\n\n` +
@@ -233,10 +233,10 @@ const T = {
       `✅ *To'lov tasdiqlandi!*\n\n👤 ${name} — to'lov qabul qilindi.\n\nOb'ektdan ketishingiz mumkin. Rahmat! 💪`,
 
     newOrder:    "🔄 Yangi buyurtma",
-    newOrderMsg: "📍 Yangi ob'ekt manzili:",
+    newOrderMsg: "👤 Yangi buyurtma uchun mijoz ismi:",
     reportTitle: (name, user, addr, svc, dur) =>
       `📋 *BUYURTMA HISOBOTI*\n━━━━━━━━━━━━━━━━━━━━\n` +
-      `👤 ${name} (@${user})\n📍 ${addr}\n🧹 ${svc}\n⏱ ${dur} daqiqa\n` +
+      `👤 ${name} (@${user})\n🧑‍💼 ${addr}\n🧹 ${svc}\n⏱ ${dur} daqiqa\n` +
       `📅 ${new Date().toLocaleString("ru-RU")}\n━━━━━━━━━━━━━━━━━━━━\n`,
     payConfirmBtn: (name) => `💳 ${name} uchun to'lovni tasdiqlash`,
     needPhoto: "⚠️ Avval kamida bitta surat yuboring!",
@@ -259,7 +259,7 @@ function sess(id) {
   if (!sessions[id]) sessions[id] = {
     step: "idle", service: null,
     photoExterior: [], photoEquip: [], photoBefore: [], photoAfter: [],
-    startedAt: null, address: null,
+    startedAt: null, client: null,
   };
   return sessions[id];
 }
@@ -293,7 +293,7 @@ async function sendReport(id, s, user) {
   const nm  = name(id) || user.first_name;
 
   const txt =
-    tr(id, "reportTitle", nm, user.username || "—", s.address || "—", svc, dur) +
+    tr(id, "reportTitle", nm, user.username || "—", s.client || "—", svc, dur) +
     `📸 Внешний вид/форма: ${s.photoExterior.length} шт\n` +
     `🧴 Оборудование: ${s.photoEquip.length} шт\n` +
     `📸 ДО: ${s.photoBefore.length} шт\n` +
@@ -369,7 +369,7 @@ bot.on("message", async (msg) => {
     return;
   }
   if (s.step === "addr") {
-    s.address   = msg.text.trim();
+    s.client = msg.text.trim();
     s.step      = "contract";
     s.startedAt = Date.now();
     await bot.sendMessage(id, tr(id, "contractMsg"), {
