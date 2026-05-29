@@ -436,7 +436,6 @@ bot.on("callback_query", async (q) => {
   const msgId = q.message.message_id;
   const data  = q.data;
   const s     = sess(id);
-  await bot.answerCallbackQuery(q.id);
 
   const langKbd = { inline_keyboard: [
     [{ text: "🇷🇺 Русский", callback_data: "L_ru" }],
@@ -445,11 +444,13 @@ bot.on("callback_query", async (q) => {
   ]};
 
   if (data === "CHANGE_LANG") {
+    await bot.answerCallbackQuery(q.id);
     await bot.sendMessage(id, T.ru.askLang, { reply_markup: langKbd });
     return;
   }
 
   if (data.startsWith("L_")) {
+    await bot.answerCallbackQuery(q.id);
     const l = data.slice(2);
     const hadName = cleaners[id] && cleaners[id].name;
     cleaners[id] = { lang: l, name: hadName || null };
@@ -465,6 +466,7 @@ bot.on("callback_query", async (q) => {
 
   // Contract OK → Step 1
   if (data === "CONTRACT_OK") {
+    await bot.answerCallbackQuery(q.id);
     s.step = "photo_exterior"; s.photoMsgId = null;
     Object.assign(s, { photoExterior: [], photoEquip: [], photoBefore: [], photoAfter: [] });
     await bot.editMessageText(tr(id, "photoExterior"), {
@@ -476,7 +478,11 @@ bot.on("callback_query", async (q) => {
 
   // Step 1 done → Step 2
   if (data === "EXTERIOR_DONE") {
-    if (!s.photoExterior.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
+    if (!s.photoExterior.length) {
+      await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true });
+      return;
+    }
+    await bot.answerCallbackQuery(q.id);
     s.step = "photo_equip"; s.photoMsgId = null;
     await bot.editMessageText(tr(id, "photoEquip"), {
       chat_id: id, message_id: msgId, parse_mode: "Markdown",
@@ -487,7 +493,11 @@ bot.on("callback_query", async (q) => {
 
   // Step 2 done → Step 3
   if (data === "EQUIP_DONE") {
-    if (!s.photoEquip.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
+    if (!s.photoEquip.length) {
+      await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true });
+      return;
+    }
+    await bot.answerCallbackQuery(q.id);
     s.step = "photo_before"; s.photoMsgId = null;
     await bot.editMessageText(tr(id, "photoBefore"), {
       chat_id: id, message_id: msgId, parse_mode: "Markdown",
@@ -498,7 +508,11 @@ bot.on("callback_query", async (q) => {
 
   // Step 3 done → Send Report 1 → show "start cleaning" button
   if (data === "BEFORE_DONE") {
-    if (!s.photoBefore.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
+    if (!s.photoBefore.length) {
+      await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true });
+      return;
+    }
+    await bot.answerCallbackQuery(q.id);
     s.step = "cleaning";
     await bot.editMessageText(tr(id, "report1Sent"), {
       chat_id: id, message_id: msgId, parse_mode: "Markdown",
@@ -510,6 +524,7 @@ bot.on("callback_query", async (q) => {
 
   // Cleaning done → Step 4: photos after
   if (data === "START_AFTER") {
+    await bot.answerCallbackQuery(q.id);
     s.step = "photo_after"; s.photoMsgId = null;
     await bot.editMessageText(tr(id, "photoAfter"), {
       chat_id: id, message_id: msgId, parse_mode: "Markdown",
@@ -520,7 +535,11 @@ bot.on("callback_query", async (q) => {
 
   // Step 4 done → Step 5: handover
   if (data === "AFTER_DONE") {
-    if (!s.photoAfter.length) { await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true }); return; }
+    if (!s.photoAfter.length) {
+      await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true });
+      return;
+    }
+    await bot.answerCallbackQuery(q.id);
     s.step = "handover";
     await bot.editMessageText(tr(id, "handover"), {
       chat_id: id, message_id: msgId, parse_mode: "Markdown",
@@ -531,6 +550,7 @@ bot.on("callback_query", async (q) => {
 
   // Handover done → Send Report 2 → wait payment
   if (data === "HANDOVER_DONE") {
+    await bot.answerCallbackQuery(q.id);
     s.step = "waiting_payment";
     await bot.editMessageText(tr(id, "waitPayment"), { chat_id: id, message_id: msgId, parse_mode: "Markdown" });
     await sendReport2(id, s, q.from);
@@ -558,6 +578,7 @@ bot.on("callback_query", async (q) => {
 
   // New order
   if (data === "NEW") {
+    await bot.answerCallbackQuery(q.id);
     const s2 = resetSess(id);
     s2.step  = "client";
     await bot.sendMessage(id, tr(id, "newOrderMsg"), { reply_markup: withLangBtn([], id) });
