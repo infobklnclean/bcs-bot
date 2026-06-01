@@ -1,58 +1,48 @@
 const TelegramBot = require("node-telegram-bot-api");
+const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
+const ADMIN = process.env.ADMIN_CHAT_ID;
 
-const TOKEN    = process.env.BOT_TOKEN;
-const ADMIN_ID = process.env.ADMIN_CHAT_ID;
-const bot      = new TelegramBot(TOKEN, { polling: true });
-
-const T = {
+const TEXT = {
   ru: {
     askName:   "👤 Введи своё имя и фамилию:",
-    askPhotos: (name) => `👋 Привет, *${name}*!\n\nОтправь фото:\n• Твоя униформа (чёрный верх, низ, обувь, перчатки)\n• Все средства и оборудование\n\n⬆️ Отправляй фото в чат (можно несколько):`,
-    got:       (n) => `📸 ${n} фото получено. Отправь ещё или нажми кнопку:`,
-    sendBtn:   "✅ Отправить отчёт",
-    sent:      "✅ Отчёт отправлен менеджеру!\n\nХорошей работы 💪",
-    newOrder:  "🔄 Новый заказ",
-    report:    (name, user) => `📋 *ОТЧЁТ — НАЧАЛО ЗАКАЗА*\n━━━━━━━━━━━━━━━━━━━━\n👷 ${name} (@${user})\n📅 ${new Date().toLocaleString("ru-RU")}\n━━━━━━━━━━━━━━━━━━━━`,
-    needPhoto: "⚠️ Сначала отправь хотя бы одно фото!",
+    askPhotos: (n) => `👋 Привет, *${n}*!\n\nОтправь фото униформы и оборудования:`,
+    got:       (n) => `📸 ${n} фото. Отправь ещё или нажми кнопку:`,
+    send:      "✅ Отправить отчёт",
+    done:      "✅ Отчёт отправлен! Хорошей работы 💪",
+    again:     "🔄 Новый заказ",
+    noPhoto:   "⚠️ Сначала отправь фото!",
+    report:    (n, u) => `📋 *ОТЧЁТ*\n👷 ${n} (@${u})\n📅 ${new Date().toLocaleString("ru-RU")}`,
   },
   en: {
-    askName:   "👤 Enter your first and last name:",
-    askPhotos: (name) => `👋 Hi, *${name}*!\n\nSend photos of:\n• Your uniform (black top, bottoms, shoes, gloves)\n• All supplies and equipment\n\n⬆️ Send photos to chat (multiple allowed):`,
-    got:       (n) => `📸 ${n} photo(s) received. Send more or tap the button:`,
-    sendBtn:   "✅ Send report",
-    sent:      "✅ Report sent to manager!\n\nGood luck! 💪",
-    newOrder:  "🔄 New order",
-    report:    (name, user) => `📋 *REPORT — ORDER START*\n━━━━━━━━━━━━━━━━━━━━\n👷 ${name} (@${user})\n📅 ${new Date().toLocaleString("en-US")}\n━━━━━━━━━━━━━━━━━━━━`,
-    needPhoto: "⚠️ Please send at least one photo first!",
+    askName:   "👤 Enter your name:",
+    askPhotos: (n) => `👋 Hi, *${n}*!\n\nSend photos of your uniform and equipment:`,
+    got:       (n) => `📸 ${n} photo(s). Send more or tap:`,
+    send:      "✅ Send report",
+    done:      "✅ Report sent! Good luck 💪",
+    again:     "🔄 New order",
+    noPhoto:   "⚠️ Send at least one photo first!",
+    report:    (n, u) => `📋 *REPORT*\n👷 ${n} (@${u})\n📅 ${new Date().toLocaleString("en-US")}`,
   },
   uz: {
     askName:   "👤 Ism va familiyangizni kiriting:",
-    askPhotos: (name) => `👋 Salom, *${name}*!\n\nSuratlarni yuboring:\n• Formangiz (qora kiyim, oyoq kiyim, qo'lqop)\n• Barcha vosita va jihozlar\n\n⬆️ Suratlarni chatga yuboring (bir nechtasini):`,
-    got:       (n) => `📸 ${n} ta surat qabul qilindi. Yana yuboring yoki tugmani bosing:`,
-    sendBtn:   "✅ Hisobotni yuborish",
-    sent:      "✅ Hisobot menejerga yuborildi!\n\nYaxshi ish! 💪",
-    newOrder:  "🔄 Yangi buyurtma",
-    report:    (name, user) => `📋 *HISOBOT — BUYURTMA BOSHLANISHI*\n━━━━━━━━━━━━━━━━━━━━\n👷 ${name} (@${user})\n📅 ${new Date().toLocaleString("ru-RU")}\n━━━━━━━━━━━━━━━━━━━━`,
-    needPhoto: "⚠️ Avval kamida bitta surat yuboring!",
+    askPhotos: (n) => `👋 Salom, *${n}*!\n\nForma va jihozlar suratlarini yuboring:`,
+    got:       (n) => `📸 ${n} ta surat. Yana yuboring yoki bosing:`,
+    send:      "✅ Hisobotni yuborish",
+    done:      "✅ Hisobot yuborildi! Yaxshi ish 💪",
+    again:     "🔄 Yangi buyurtma",
+    noPhoto:   "⚠️ Avval surat yuboring!",
+    report:    (n, u) => `📋 *HISOBOT*\n👷 ${n} (@${u})\n📅 ${new Date().toLocaleString("ru-RU")}`,
   },
 };
 
-// ─── SESSION & HELPERS ────────────────────────────────────────────────────────
-
 const sessions = {};
-const cleaners = {};
+const users    = {};
 
-function sess(id) {
-  if (!sessions[id]) sessions[id] = { step: "idle", photos: [], photoMsgId: null };
-  return sessions[id];
-}
-function resetSess(id) { sessions[id] = null; return sess(id); }
-function lang(id)  { return (cleaners[id] && cleaners[id].lang) || "ru"; }
-function uname(id) { return (cleaners[id] && cleaners[id].name) || ""; }
-function tr(id, key, ...a) {
-  const fn = T[lang(id)][key];
-  return typeof fn === "function" ? fn(...a) : fn;
-}
+const s    = (id) => sessions[id] || (sessions[id] = { step: "idle", photos: [], msgId: null });
+const reset= (id) => { sessions[id] = { step: "idle", photos: [], msgId: null }; return sessions[id]; };
+const l    = (id) => users[id]?.lang || "ru";
+const name = (id) => users[id]?.name || "";
+const t    = (id, key, ...a) => { const f = TEXT[l(id)][key]; return typeof f === "function" ? f(...a) : f; };
 
 const langKbd = { inline_keyboard: [
   [{ text: "🇷🇺 Русский", callback_data: "L_ru" }],
@@ -60,109 +50,71 @@ const langKbd = { inline_keyboard: [
   [{ text: "🇺🇿 O'zbek",  callback_data: "L_uz" }],
 ]};
 
-const startKbd = {
-  keyboard: [[{ text: "🚀 Начать / Start / Boshlash" }]],
-  resize_keyboard: true,
-  persistent: true,
-};
+const startKbd = { keyboard: [[{ text: "🚀 Start" }]], resize_keyboard: true, persistent: true };
 
-// ─── /start ───────────────────────────────────────────────────────────────────
-
-bot.onText(/\/start/, async (msg) => {
+bot.onText(/\/start|🚀 Start/, async (msg) => {
   const id = msg.chat.id;
-  resetSess(id);
-  // Set persistent bottom keyboard first
+  reset(id);
   await bot.sendMessage(id, "👇", { reply_markup: startKbd });
-  // Then show language selection as inline keyboard
   await bot.sendMessage(id, "🌐 Выбери язык / Choose language / Tilni tanlang:", { reply_markup: langKbd });
 });
 
-// ─── MESSAGES ─────────────────────────────────────────────────────────────────
-
 bot.on("message", async (msg) => {
   const id = msg.chat.id;
-  const s  = sess(id);
+  const ss = s(id);
+  if (msg.text === "🚀 Start") return; // handled by onText
 
   if (msg.photo) {
-    if (s.step !== "photos") return;
-    s.photos.push(msg.photo[msg.photo.length - 1].file_id);
-    const n      = s.photos.length;
-    const text   = tr(id, "got", n);
-    const markup = { inline_keyboard: [[{ text: tr(id, "sendBtn"), callback_data: "SEND" }]] };
-    if (s.photoMsgId) {
-      try { await bot.deleteMessage(id, s.photoMsgId); } catch (_) {}
-    }
-    const sent = await bot.sendMessage(id, text, { reply_markup: markup });
-    s.photoMsgId = sent.message_id;
-    return;
-  }
-
-  if (msg.text === "🚀 Начать / Start / Boshlash") {
-    resetSess(id);
-    await bot.sendMessage(id, "🌐 Выбери язык / Choose language / Tilni tanlang:", { reply_markup: langKbd });
+    if (ss.step !== "photos") return;
+    ss.photos.push(msg.photo[msg.photo.length - 1].file_id);
+    const markup = { inline_keyboard: [[{ text: t(id, "send"), callback_data: "SEND" }]] };
+    if (ss.msgId) try { await bot.deleteMessage(id, ss.msgId); } catch (_) {}
+    const sent = await bot.sendMessage(id, t(id, "got", ss.photos.length), { reply_markup: markup });
+    ss.msgId = sent.message_id;
     return;
   }
 
   if (!msg.text || msg.text.startsWith("/")) return;
 
-  if (s.step === "name") {
-    cleaners[id].name = msg.text.trim();
-    s.step = "photos";
-    await bot.sendMessage(id, tr(id, "askPhotos", uname(id)), { parse_mode: "Markdown" });
+  if (ss.step === "name") {
+    users[id].name = msg.text.trim();
+    ss.step = "photos";
+    await bot.sendMessage(id, t(id, "askPhotos", name(id)), { parse_mode: "Markdown" });
   }
 });
-
-// ─── CALLBACKS ────────────────────────────────────────────────────────────────
 
 bot.on("callback_query", async (q) => {
-  const id    = q.message.chat.id;
-  const msgId = q.message.message_id;
-  const data  = q.data;
-  const s     = sess(id);
+  const id  = q.message.chat.id;
+  const mid = q.message.message_id;
+  const ss  = s(id);
   await bot.answerCallbackQuery(q.id);
 
-  // Language
-  if (data.startsWith("L_")) {
-    const l = data.slice(2);
-    cleaners[id] = { lang: l, name: null };
-    sess(id).step = "name";
-    await bot.editMessageText(T[l].askName, { chat_id: id, message_id: msgId });
+  if (q.data.startsWith("L_")) {
+    users[id] = { lang: q.data.slice(2), name: null };
+    s(id).step = "name";
+    await bot.editMessageText(t(id, "askName"), { chat_id: id, message_id: mid });
     return;
   }
 
-  // Send report
-  if (data === "SEND") {
-    if (!s.photos.length) {
-      await bot.answerCallbackQuery(q.id, { text: tr(id, "needPhoto"), show_alert: true });
-      return;
-    }
-    const nm   = uname(id) || q.from.first_name;
-    const user = q.from.username || "—";
-
-    // Notify cleaner
-    await bot.editMessageText(tr(id, "sent"), {
-      chat_id: id, message_id: msgId,
-      reply_markup: { inline_keyboard: [[{ text: tr(id, "newOrder"), callback_data: "NEW" }]] },
+  if (q.data === "SEND") {
+    if (!ss.photos.length) { await bot.answerCallbackQuery(q.id, { text: t(id, "noPhoto"), show_alert: true }); return; }
+    await bot.editMessageText(t(id, "done"), {
+      chat_id: id, message_id: mid,
+      reply_markup: { inline_keyboard: [[{ text: t(id, "again"), callback_data: "NEW" }]] },
     });
-
-
-    // Send report to admin
-    if (ADMIN_ID) {
-      await bot.sendMessage(ADMIN_ID, tr(id, "report", nm, user), { parse_mode: "Markdown" });
-      await bot.sendMessage(ADMIN_ID, "📸 *Фото:*", { parse_mode: "Markdown" });
-      for (const f of s.photos) await bot.sendPhoto(ADMIN_ID, f);
+    if (ADMIN) {
+      await bot.sendMessage(ADMIN, t(id, "report", name(id) || q.from.first_name, q.from.username || "—"), { parse_mode: "Markdown" });
+      for (const f of ss.photos) await bot.sendPhoto(ADMIN, f);
     }
-
-    resetSess(id);
+    reset(id);
     return;
   }
 
-  // New order
-  if (data === "NEW") {
-    const s2 = resetSess(id);
-    s2.step  = "photos";
-    await bot.sendMessage(id, tr(id, "askPhotos", uname(id)), { parse_mode: "Markdown" });
+  if (q.data === "NEW") {
+    const ss2 = reset(id);
+    ss2.step  = "photos";
+    await bot.sendMessage(id, t(id, "askPhotos", name(id)), { parse_mode: "Markdown" });
   }
 });
 
-console.log("🤖 BCS Bot v8 (simple) started...");
+console.log("BCS Bot started");
