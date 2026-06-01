@@ -71,7 +71,10 @@ const startKbd = {
 bot.onText(/\/start/, async (msg) => {
   const id = msg.chat.id;
   resetSess(id);
-  await bot.sendMessage(id, "🌐 Выбери язык / Choose language / Tilni tanlang:", { reply_markup: { ...langKbd, ...startKbd } });
+  // Set persistent bottom keyboard first
+  await bot.sendMessage(id, "👇", { reply_markup: startKbd });
+  // Then show language selection as inline keyboard
+  await bot.sendMessage(id, "🌐 Выбери язык / Choose language / Tilni tanlang:", { reply_markup: langKbd });
 });
 
 // ─── MESSAGES ─────────────────────────────────────────────────────────────────
@@ -96,7 +99,7 @@ bot.on("message", async (msg) => {
 
   if (msg.text === "🚀 Начать / Start / Boshlash") {
     resetSess(id);
-    await bot.sendMessage(id, "🌐 Выбери язык / Choose language / Tilni tanlang:", { reply_markup: { ...langKbd, ...startKbd } });
+    await bot.sendMessage(id, "🌐 Выбери язык / Choose language / Tilni tanlang:", { reply_markup: langKbd });
     return;
   }
 
@@ -141,7 +144,7 @@ bot.on("callback_query", async (q) => {
       chat_id: id, message_id: msgId,
       reply_markup: { inline_keyboard: [[{ text: tr(id, "newOrder"), callback_data: "NEW" }]] },
     });
-    await bot.sendMessage(id, "👇", { reply_markup: startKbd });
+
 
     // Send report to admin
     if (ADMIN_ID) {
