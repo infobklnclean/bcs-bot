@@ -60,12 +60,18 @@ const langKbd = { inline_keyboard: [
   [{ text: "🇺🇿 O'zbek",  callback_data: "L_uz" }],
 ]};
 
+const startKbd = {
+  keyboard: [[{ text: "🚀 Начать / Start / Boshlash" }]],
+  resize_keyboard: true,
+  persistent: true,
+};
+
 // ─── /start ───────────────────────────────────────────────────────────────────
 
 bot.onText(/\/start/, async (msg) => {
   const id = msg.chat.id;
   resetSess(id);
-  await bot.sendMessage(id, "🌐 Выбери язык / Choose language / Tilni tanlang:", { reply_markup: langKbd });
+  await bot.sendMessage(id, "🌐 Выбери язык / Choose language / Tilni tanlang:", { reply_markup: { ...langKbd, ...startKbd } });
 });
 
 // ─── MESSAGES ─────────────────────────────────────────────────────────────────
@@ -85,6 +91,12 @@ bot.on("message", async (msg) => {
     }
     const sent = await bot.sendMessage(id, text, { reply_markup: markup });
     s.photoMsgId = sent.message_id;
+    return;
+  }
+
+  if (msg.text === "🚀 Начать / Start / Boshlash") {
+    resetSess(id);
+    await bot.sendMessage(id, "🌐 Выбери язык / Choose language / Tilni tanlang:", { reply_markup: { ...langKbd, ...startKbd } });
     return;
   }
 
@@ -129,6 +141,7 @@ bot.on("callback_query", async (q) => {
       chat_id: id, message_id: msgId,
       reply_markup: { inline_keyboard: [[{ text: tr(id, "newOrder"), callback_data: "NEW" }]] },
     });
+    await bot.sendMessage(id, "👇", { reply_markup: startKbd });
 
     // Send report to admin
     if (ADMIN_ID) {
